@@ -22,8 +22,8 @@ UML Sequence Diagram:
 Test Code:
   Done by:
   
-x.java:
-  Done by:
+Elevator.java:
+  Done by: Gilles Myny
 
 y.java:
   Done by:
