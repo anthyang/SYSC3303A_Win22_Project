@@ -3,7 +3,7 @@ Team Member Responsibility Breakdown - Iteration 1:
 Team Members:
 - Gilles Myny 101145477
 - Joshua Gatto 101150890
-- 
+- Anthony Yang 101130140
 - 
 - Phuc La 101107588
 
