@@ -4,7 +4,7 @@ Team Members:
 - Gilles Myny 101145477
 - Joshua Gatto 101150890
 - Anthony Yang 101130140
-- 
+- Nicolas Tuttle 101105699
 - Phuc La 101107588
 
 README.txt
@@ -25,8 +25,8 @@ Test Code:
 Elevator.java:
   Done by: Gilles Myny
 
-y.java:
-  Done by:
+Floor.java:
+  Done by: Nicolas Tuttle
   
 z.java:
   Done by:
