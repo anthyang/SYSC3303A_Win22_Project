@@ -14,10 +14,10 @@ ResponsibilityBreakdown.txt
   Done by: Gilles Myny
   
 UML Class Diagram
-  Done by: 
+  Done by: Anthony Yang
   
 UML Sequence Diagram:
-  Done by:
+  Done by: Anthony Yang
   
 Test Code:
   Done by: Phuc La
@@ -28,5 +28,5 @@ Elevator.java:
 Floor.java:
   Done by: Nicolas Tuttle
   
-z.java:
-  Done by:
+Scheduler.java:
+  Done by: Anthony Yang
