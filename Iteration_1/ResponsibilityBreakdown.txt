@@ -8,16 +8,16 @@ Team Members:
 - Phuc La 101107588
 
 README.txt
-  Done by:
+  Done by: Joshua Gatto
   
 ResponsibilityBreakdown.txt
   Done by: Gilles Myny
   
 UML Class Diagram
-  Done by: Anthony Yang
+  Done by: Joshua Gatto
   
 UML Sequence Diagram:
-  Done by: Anthony Yang
+  Done by: Joshua Gatto
   
 Test Code:
   Done by: Phuc La
