@@ -20,7 +20,7 @@ UML Sequence Diagram:
   Done by:
   
 Test Code:
-  Done by:
+  Done by: Phuc La
   
 Elevator.java:
   Done by: Gilles Myny
