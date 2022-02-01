@@ -1,4 +1,4 @@
-import java.util.List;
+import java.util.*;
 
 public class Elevator implements Runnable {
     private int elevDoorNum;
