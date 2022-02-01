@@ -7,7 +7,7 @@ public class Elevator implements Runnable {
     private int currentFloor;
     private int maxFloors;
     private Direction direction;
-    private List<Integer> localQueue;
+    private List<Integer> localQueue; // what is this for?
 
     public Elevator(int id, Scheduler sch, int floorCount) {
     	this.elevDoorNum = id;
@@ -37,7 +37,7 @@ public class Elevator implements Runnable {
     			System.err.println(e);
     		}
     	}
-    	int destination = this.scheduler.getFloorNum(this.elevDoorNum);
+    	int destination = this.scheduler.getFloorNum(this.elevDoorNum); // need to implement getFloorNum in scheduler
     	if((destination - currentFloor) > 0) {
     		direction = Direction.UP;
     	} else if((destination - currentFloor) < 0) {
