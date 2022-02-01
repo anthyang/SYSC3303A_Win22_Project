@@ -5,19 +5,15 @@ public class Elevator implements Runnable {
     private Boolean floorLamps[];
     private Scheduler scheduler;
     private int currentFloor;
-    private int maxFloors;
     private Direction direction;
-    private List<Integer> localQueue; // what is this for?
 
     public Elevator(int id, Scheduler sch, int floorCount) {
     	this.elevDoorNum = id;
     	this.currentFloor = 1;
     	this.scheduler = sch;
     	floorLamps = new Boolean[floorCount];
-    	maxFloors = floorCount;
     }
 
-    @Override
     public void run() {
     	while(true) {
     		moveElevator();
@@ -28,6 +24,33 @@ public class Elevator implements Runnable {
     	this.scheduler.addToServiceQueue(selFloor, this.elevDoorNum);
     	floorLamps[selFloor - 1] = true;
     }
+    
+    public void simMovement() {
+    	System.out.println("Elevator " + this.elevDoorNum + " is moving.");
+    	try {
+    		Thread.sleep(10); // example of 10 ms, need to get exact time in ms
+    	} catch(InterruptedException e) {
+    		System.err.println(e);
+    	}
+    }
+
+    private void openDoor() {
+    	System.out.println("Elevator " + this.elevDoorNum + " is opening doors at floor " + this.currentFloor);
+    	try {
+    		Thread.sleep(5); // example of 5 ms, need to get half of unloading/offloading time
+    	} catch(InterruptedException e) {
+    		System.err.println(e);
+    	}
+    }
+
+    private void closeDoor() {
+    	System.out.println("Elevator " + this.elevDoorNum + " is closing doors at floor " + this.currentFloor);
+    	try {
+    		Thread.sleep(5); // example of 5 ms, need to get half of unloading/offloading time
+    	} catch(InterruptedException e) {
+    		System.err.println(e);
+    	}
+    }
 
     public void moveElevator() {
     	if(!this.scheduler.checkQueue(this.elevDoorNum)) {
@@ -37,7 +60,7 @@ public class Elevator implements Runnable {
     			System.err.println(e);
     		}
     	}
-    	int destination = this.scheduler.getFloorNum(this.elevDoorNum); // need to implement getFloorNum in scheduler
+    	int destination = this.scheduler.getFloorNum(this.elevDoorNum); // need to implement getFloorNum in scheduler to return floor integer of next floor in queue
     	if((destination - currentFloor) > 0) {
     		direction = Direction.UP;
     	} else if((destination - currentFloor) < 0) {
@@ -49,7 +72,7 @@ public class Elevator implements Runnable {
     		while(!(currentFloor == destination)) {
     			simMovement();
     			currentFloor++;
-    			if(this.scheduler.floorInQueue(currentFloor)) {
+    			if(this.scheduler.floorInQueue(currentFloor, this.elevDoorNum)) { // need to implement floorInQueue in scheduler to return boolean if current floor is in the queue
     				openDoor();
     				floorSelectPanel(selectedFloor); // selectedFloor is user selected floor destination
     				closeDoor();
@@ -59,32 +82,17 @@ public class Elevator implements Runnable {
     		while(!(currentFloor == destination)) {
     			simMovement();
     			currentFloor--;
-    			//check if current floor is in the queue
+    			if(this.scheduler.floorInQueue(currentFloor, this.elevDoorNum)) { // need to implement floorInQueue in scheduler to return boolean if current floor is in the queue
+    				openDoor();
+    				floorSelectPanel(selectedFloor); // selectedFloor is user prompt selected floor destination
+    				closeDoor();
+    			}
     		}
     	}
     	//once its at its destination
     	floorLamps[destination - 1] = false;
+    	this.scheduler.atDestination(destination, this.elevDoorNum); // need to implement atDestination in scheduler to remove given floor number from queue
     	openDoor();
     	closeDoor();
-    }
-
-    public void simMovement() {
-    	try {
-    		Thread.sleep(10); // example of 10 ms
-    	} catch(InterruptedException e) {
-    		System.err.println(e);
-    	}
-    }
-
-    public int getCurrentFloor() {
-        return currentFloor;
-    }
-
-    private void openDoor() {
-
-    }
-
-    private void closeDoor() {
-
     }
 }
