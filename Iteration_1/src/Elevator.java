@@ -6,6 +6,9 @@ public class Elevator implements Runnable {
     private Scheduler scheduler;
     private int currentFloor;
     private Direction direction;
+    
+    private final int ELEVATOR_MOVEMENT = 2832;
+    private final int DOOR_MOVEMENT = 4590;
 
     public Elevator(int id, Scheduler sch, int floorCount) {
     	this.elevDoorNum = id;
@@ -28,7 +31,7 @@ public class Elevator implements Runnable {
     public void simMovement() {
     	System.out.println("Elevator " + this.elevDoorNum + " is moving.");
     	try {
-    		Thread.sleep(10); // example of 10 ms, need to get exact time in ms
+    		Thread.sleep(ELEVATOR_MOVEMENT); // time in ms to move from one floor to another
     	} catch(InterruptedException e) {
     		System.err.println(e);
     	}
@@ -37,7 +40,7 @@ public class Elevator implements Runnable {
     private void openDoor() {
     	System.out.println("Elevator " + this.elevDoorNum + " is opening doors at floor " + this.currentFloor);
     	try {
-    		Thread.sleep(5); // example of 5 ms, need to get half of unloading/offloading time
+    		Thread.sleep(DOOR_MOVEMENT); // example of 5 ms, need to get half of unloading/offloading time
     	} catch(InterruptedException e) {
     		System.err.println(e);
     	}
@@ -46,7 +49,7 @@ public class Elevator implements Runnable {
     private void closeDoor() {
     	System.out.println("Elevator " + this.elevDoorNum + " is closing doors at floor " + this.currentFloor);
     	try {
-    		Thread.sleep(5); // example of 5 ms, need to get half of unloading/offloading time
+    		Thread.sleep(DOOR_MOVEMENT); // example of 5 ms, need to get half of unloading/offloading time
     	} catch(InterruptedException e) {
     		System.err.println(e);
     	}
