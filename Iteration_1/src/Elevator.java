@@ -40,7 +40,7 @@ public class Elevator implements Runnable {
     private void openDoor() {
     	System.out.println("Elevator " + this.elevDoorNum + " is opening doors at floor " + this.currentFloor);
     	try {
-    		Thread.sleep(DOOR_MOVEMENT); // example of 5 ms, need to get half of unloading/offloading time
+    		Thread.sleep(DOOR_MOVEMENT); // time in ms to open doors
     	} catch(InterruptedException e) {
     		System.err.println(e);
     	}
@@ -49,14 +49,14 @@ public class Elevator implements Runnable {
     private void closeDoor() {
     	System.out.println("Elevator " + this.elevDoorNum + " is closing doors at floor " + this.currentFloor);
     	try {
-    		Thread.sleep(DOOR_MOVEMENT); // example of 5 ms, need to get half of unloading/offloading time
+    		Thread.sleep(DOOR_MOVEMENT); // time in ms to close doors
     	} catch(InterruptedException e) {
     		System.err.println(e);
     	}
     }
 
     public void moveElevator() {
-    	if(!this.scheduler.checkQueue(this.elevDoorNum)) {
+    	if(this.scheduler.checkQueue(this.elevDoorNum)) {
     		try {
     			wait();
     		} catch(InterruptedException e) {
@@ -64,13 +64,7 @@ public class Elevator implements Runnable {
     		}
     	}
     	int destination = this.scheduler.getFloorNum(this.elevDoorNum); // need to implement getFloorNum in scheduler to return floor integer of next floor in queue
-    	if((destination - currentFloor) > 0) {
-    		direction = Direction.UP;
-    	} else if((destination - currentFloor) < 0) {
-    		direction = Direction.DOWN;
-    	} else {
-    		// prompt user to choose new floor from panel
-    	}
+    	direction = this.scheduler.getDirection(this.elevDoorNum);
     	if(direction == Direction.UP) {
     		while(!(currentFloor == destination)) {
     			simMovement();
