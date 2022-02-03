@@ -5,7 +5,7 @@ public class Elevator implements Runnable {
     private Boolean floorLamps[];
     private Scheduler scheduler;
     private int currentFloor;
-    private Direction direction;
+    private Set<Integer> floorsToVisit; 
     
     private final int ELEVATOR_MOVEMENT = 2832;
     private final int DOOR_MOVEMENT = 4590;
@@ -15,6 +15,7 @@ public class Elevator implements Runnable {
     	this.currentFloor = 1;
     	this.scheduler = sch;
     	floorLamps = new Boolean[floorCount];
+    	floorsToVisit = new HashSet<>();
     }
 
     public void run() {
@@ -22,25 +23,26 @@ public class Elevator implements Runnable {
     		moveElevator();
     	}
     }
-
-    public void floorSelectPanel(int selFloor) {
-    	this.scheduler.addToServiceQueue(selFloor, this.elevDoorNum);
-    	floorLamps[selFloor - 1] = true;
-    }
     
-    public void simMovement() {
+    public void simMovement(Direction dir) {
     	System.out.println("Elevator " + this.elevDoorNum + " is moving.");
     	try {
-    		Thread.sleep(ELEVATOR_MOVEMENT); // time in ms to move from one floor to another
+    		Thread.sleep(ELEVATOR_MOVEMENT);
     	} catch(InterruptedException e) {
     		System.err.println(e);
     	}
+    	if(dir == Direction.UP) {
+			currentFloor++;
+		} else {
+			currentFloor--;
+		}
+    	
     }
 
     private void openDoor() {
     	System.out.println("Elevator " + this.elevDoorNum + " is opening doors at floor " + this.currentFloor);
     	try {
-    		Thread.sleep(DOOR_MOVEMENT); // time in ms to open doors
+    		Thread.sleep(DOOR_MOVEMENT);
     	} catch(InterruptedException e) {
     		System.err.println(e);
     	}
@@ -49,47 +51,40 @@ public class Elevator implements Runnable {
     private void closeDoor() {
     	System.out.println("Elevator " + this.elevDoorNum + " is closing doors at floor " + this.currentFloor);
     	try {
-    		Thread.sleep(DOOR_MOVEMENT); // time in ms to close doors
+    		Thread.sleep(DOOR_MOVEMENT);
     	} catch(InterruptedException e) {
     		System.err.println(e);
     	}
     }
 
     public void moveElevator() {
-    	if(this.scheduler.checkQueue(this.elevDoorNum)) {
-    		try {
-    			wait();
-    		} catch(InterruptedException e) {
-    			System.err.println(e);
-    		}
-    	}
-    	int destination = this.scheduler.getFloorNum(this.elevDoorNum); // need to implement getFloorNum in scheduler to return floor integer of next floor in queue
-    	direction = this.scheduler.getDirection(this.elevDoorNum);
-    	if(direction == Direction.UP) {
-    		while(!(currentFloor == destination)) {
-    			simMovement();
-    			currentFloor++;
-    			if(this.scheduler.floorInQueue(currentFloor, this.elevDoorNum)) { // need to implement floorInQueue in scheduler to return boolean if current floor is in the queue
-    				openDoor();
-    				floorSelectPanel(selectedFloor); // selectedFloor is user selected floor destination
-    				closeDoor();
-    			}
-    		}
-    	} else if(direction == Direction.DOWN) {
-    		while(!(currentFloor == destination)) {
-    			simMovement();
-    			currentFloor--;
-    			if(this.scheduler.floorInQueue(currentFloor, this.elevDoorNum)) { // need to implement floorInQueue in scheduler to return boolean if current floor is in the queue
-    				openDoor();
-    				floorSelectPanel(selectedFloor); // selectedFloor is user prompt selected floor destination
-    				closeDoor();
-    			}
-    		}
-    	}
-    	//once its at its destination
-    	floorLamps[destination - 1] = false;
-    	this.scheduler.atDestination(destination, this.elevDoorNum); // need to implement atDestination in scheduler to remove given floor number from queue
     	openDoor();
+    	Request req = this.scheduler.getAvailRequest();
     	closeDoor();
+    	
+    	int sourceFloor = req.sourceFloor;
+    	
+    	while(!(currentFloor == sourceFloor)) {
+			simMovement((sourceFloor > currentFloor) ? Direction.UP : Direction.DOWN);
+		}
+    	
+    	floorsToVisit.add(req.destFloor);
+    	floorLamps[req.destFloor - 1] = true;
+    	Direction direction = req.direction;
+    	
+    	while(!floorsToVisit.isEmpty()) {
+    		simMovement(direction);
+    		List<Request> reqList = this.scheduler.checkRequest(currentFloor, direction);
+    		for(Request r : reqList) {
+    			floorsToVisit.add(r.destFloor);
+    			floorLamps[r.destFloor - 1] = true;
+    		}
+    		if((!reqList.isEmpty()) || (floorsToVisit.contains(currentFloor))) {
+    			openDoor();
+    			floorsToVisit.remove(currentFloor);
+    			floorLamps[currentFloor - 1] = false;
+    			closeDoor();
+    		}
+    	}
     }
 }
