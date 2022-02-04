@@ -93,18 +93,21 @@ public class Elevator implements Runnable {
      */
     public void moveElevator() {
     	openDoor();
-    	Request req = this.scheduler.getAvailRequest();
+		List<Request> req = this.scheduler.getAvailRequest();
     	closeDoor();
-    	
-    	int sourceFloor = req.getSourceFloor();
+
+		int sourceFloor = 1;
+		Direction direction = Direction.NOT_MOVING;
+		for (Request request : req) {
+			sourceFloor = request.getSourceFloor();
+			floorsToVisit.add(request.getDestFloor());
+			floorLamps[request.getDestFloor() - 1] = true;
+			direction = request.getDirection();
+		}
     	
     	while(!(currentFloor == sourceFloor)) {
 			simMovement((sourceFloor > currentFloor) ? Direction.UP : Direction.DOWN);
 		}
-    	
-    	floorsToVisit.add(req.getDestFloor());
-    	floorLamps[req.getDestFloor() - 1] = true;
-    	Direction direction = req.getDirection();
     	
     	while(!floorsToVisit.isEmpty()) {
     		simMovement(direction);
