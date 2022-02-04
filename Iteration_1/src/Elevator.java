@@ -62,22 +62,22 @@ public class Elevator implements Runnable {
     	Request req = this.scheduler.getAvailRequest();
     	closeDoor();
     	
-    	int sourceFloor = req.sourceFloor;
+    	int sourceFloor = req.getSourceFloor();
     	
     	while(!(currentFloor == sourceFloor)) {
 			simMovement((sourceFloor > currentFloor) ? Direction.UP : Direction.DOWN);
 		}
     	
-    	floorsToVisit.add(req.destFloor);
-    	floorLamps[req.destFloor - 1] = true;
-    	Direction direction = req.direction;
+    	floorsToVisit.add(req.getDestFloor());
+    	floorLamps[req.getDestFloor() - 1] = true;
+    	Direction direction = req.getDirection();
     	
     	while(!floorsToVisit.isEmpty()) {
     		simMovement(direction);
     		List<Request> reqList = this.scheduler.checkRequest(currentFloor, direction);
     		for(Request r : reqList) {
-    			floorsToVisit.add(r.destFloor);
-    			floorLamps[r.destFloor - 1] = true;
+    			floorsToVisit.add(r.getDestFloor());
+    			floorLamps[r.getDestFloor() - 1] = true;
     		}
     		if((!reqList.isEmpty()) || (floorsToVisit.contains(currentFloor))) {
     			openDoor();

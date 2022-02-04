@@ -31,4 +31,12 @@ public class Scheduler {
     public void removeFromQueue() {
 
     }
+
+    public Request getAvailRequest() {
+        return null;
+    }
+
+    public List<Request> checkRequest(int currentFloor, Direction direction) {
+        return null;
+    }
 }
