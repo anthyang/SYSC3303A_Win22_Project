@@ -31,61 +31,61 @@ public class Scheduler {
 	}
 	// synchronized the addition of source floor, destination floor, and direction to queue. 
 	public synchronized void addToServiceQueue (int sourceFloor, int destFloor, String direction) {		
-        while (!empty) {
-            try {
-                wait();
-            } catch (InterruptedException e) {
-            	System.out.println("An interrupted exception error occurs.");
-                return;
-            }
-        }
+        	while (!empty) {
+            		try {
+                		wait();
+            		} catch (InterruptedException e) {
+            			System.out.println("An interrupted exception error occurs.");
+                		return;
+            		}
+        	}
         
-        req = new Request(1, 4, direction);       
-        r.add(req);
-        // add to queue.
-        queues.add(r);
-        empty = false;
+        	req = new Request(1, 4, direction);       
+        	r.add(req);
+        	// add to queue.
+        	queues.add(r);
+        	empty = false;
 		notifyAll();
 	}
 	
 	// check specific request queue given any floor number and direction
-    public List<Request> checkRequest(int floorNum, String direction) {
-        if (queues.get(floorNum).isEmpty()) {
-        	System.out.println("No request in the direction " + direction + " from the given floor " + floorNum);
-        	return null;
+    	public List<Request> checkRequest(int floorNum, String direction) {
+        	if (queues.get(floorNum).isEmpty()) {
+        		System.out.println("No request in the direction " + direction + " from the given floor " + floorNum);
+        		return null;
         } 
         
-       List aRequest = null;
-       for (int i = queues.get(floorNum).size(); i > 0; i--)
-        {
+       		List aRequest = null;
+       		for (int i = queues.get(floorNum).size(); i > 0; i--)
+        	{
         	 
-        	 if ((queues.get(floorNum).contains(direction)))
-        	 {
-        		 aRequest = queues.get(floorNum);
-        		 queues.remove(floorNum);
-        		 break;
-        	 }
+        	 	if ((queues.get(floorNum).contains(direction)))
+        	 	{
+        		 	aRequest = queues.get(floorNum);
+        		 	queues.remove(floorNum);
+        		 	break;
+        	 	}
         	
-        }
-         return aRequest;        
+        	}
+         	return aRequest;        
     }
     
-    // return a request if there is a request in queue,
-    // it returns null 
-    public synchronized List<Request> getAvailRequest() {
-        while (empty) {
-            try {
-                wait();
-            } catch (InterruptedException e) {
-            	System.out.println("An interrupted exception error occurs.");
+    	// return a request if there is a request in queue,
+    	// it returns null 
+    	public synchronized List<Request> getAvailRequest() {
+        	while (empty) {
+            	try {
+                	wait();
+            	} catch (InterruptedException e) {
+            		System.out.println("An interrupted exception error occurs.");
                 
-            }
-        }
-        empty = true;
-        // send a notification to wake up all threads.
-        notifyAll();
-    	return queues.pollLast();
-    }
+		    }
+		}
+        	empty = true;
+        	// send a notification to wake up all threads.
+       	 	notifyAll();
+    		return queues.pollLast();
+    	}
     
     // display to check resulted matrix:
     public void printQueue() {
