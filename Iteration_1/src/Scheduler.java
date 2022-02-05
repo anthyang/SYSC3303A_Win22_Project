@@ -2,100 +2,88 @@
  * Scheduler class to coordinate the elevator and floor queues.
  *
  */
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.LinkedList;
+import java.util.*;
 
 public class Scheduler {
-	// a queue to store the floor and requests:
-	private LinkedList<List<Request>> queues; 
-	// a list to store multiple requests:
-	private List<Request> r;
-	// set the highest floor of a building
-	private int maxFloor;
-	// handle an elevator request in the format: floor request, direction (UP, DOWN)
-	private Request req;
-	
-	// handle an elevator direction specification. 
-	private Direction direction;
-	// define the enumerator for the elevator directions
-	private enum Direction{UP,DOWN};
-	// boolean of the request queue
-	private boolean empty;
+	// store requests by floor and direction:
+	private List<Map<Direction, List<Request>>> floors;
+	// store requests in a long list -- linked to floors
+	private List<List<Request>> queues;
+
 	//constructor to initialize queues, list, request.
 	public Scheduler() {
-		queues = new LinkedList<>();
-		r = new ArrayList<Request>();
-		empty = true;
+		floors = new ArrayList<>();
+		queues = new ArrayList<>();
+		for (int i = 0; i < Building.NUM_FLOORS; i++) {
+			Map<Direction, List<Request>> directionMap = new HashMap<>();
+			List<Request> upQueue = new ArrayList<>();
+			List<Request> downQueue = new ArrayList<>();
+			directionMap.put(Direction.UP, upQueue);
+			directionMap.put(Direction.DOWN, downQueue);
+			floors.add(directionMap);
+
+			queues.add(upQueue);
+			queues.add(downQueue);
+		}
 	}
-	// synchronized the addition of source floor, destination floor, and direction to queue. 
-	public synchronized void addToServiceQueue (int sourceFloor, int destFloor, String direction) {		
-        	while (!empty) {
-            		try {
-                		wait();
-            		} catch (InterruptedException e) {
-            			System.out.println("An interrupted exception error occurs.");
-                		return;
-            		}
-        	}
-        
-        	req = new Request(1, 4, direction);       
-        	r.add(req);
-        	// add to queue.
-        	queues.add(r);
-        	empty = false;
+
+	private List<Request> getQueue(int floor, Direction direction) {
+		return floors.get(floor - 1).get(direction);
+	}
+
+	// addition of source floor, destination floor, and direction to queue.
+	public synchronized void addToServiceQueue(int sourceFloor, int destFloor, Direction direction) {
+		Request req = new Request(sourceFloor, destFloor, direction);
+		getQueue(sourceFloor, direction).add(req);
+
 		notifyAll();
 	}
 	
 	// check specific request queue given any floor number and direction
-    	public List<Request> checkRequest(int floorNum, String direction) {
-        	if (queues.get(floorNum).isEmpty()) {
-        		System.out.println("No request in the direction " + direction + " from the given floor " + floorNum);
-        		return null;
-        } 
-        
-       		List aRequest = null;
-       		for (int i = queues.get(floorNum).size(); i > 0; i--)
-        	{
-        	 
-        	 	if ((queues.get(floorNum).contains(direction)))
-        	 	{
-        		 	aRequest = queues.get(floorNum);
-        		 	queues.remove(floorNum);
-        		 	break;
-        	 	}
-        	
-        	}
-         	return aRequest;        
-    }
-    
-    	// return a request if there is a request in queue,
-    	// it returns null 
-    	public synchronized List<Request> getAvailRequest() {
-        	while (empty) {
-            	try {
-                	wait();
-            	} catch (InterruptedException e) {
-            		System.out.println("An interrupted exception error occurs.");
-                
-		    }
+	public List<Request> checkRequest(int floorNum, Direction direction) {
+		List<Request> aRequest = new ArrayList<>();
+		List<Request> floorQueue = getQueue(floorNum, direction);
+		if (floorQueue.isEmpty()) {
+			System.out.println("No request in the direction " + direction + " from the given floor " + floorNum);
+		} else {
+			aRequest = new ArrayList<>(floorQueue);
+			floorQueue.clear();
 		}
-        	empty = true;
-        	// send a notification to wake up all threads.
-       	 	notifyAll();
-    		return queues.pollLast();
-    	}
+
+		return aRequest;
+    }
+
+	private boolean allQueuesEmpty() {
+		return queues.stream().allMatch(List::isEmpty);
+	}
+    
+	// return a request if there is a request in queue
+	public synchronized List<Request> getAvailRequest() {
+		while (allQueuesEmpty()) {
+			try {
+				wait();
+			} catch (InterruptedException e) {
+				System.out.println("An interrupted exception error occurs.");
+			}
+		}
+
+		List<Request> availRequests = new ArrayList<>();
+		for (List<Request> queue : queues) {
+			if (!queue.isEmpty()) {
+				availRequests = new ArrayList<>(queue);
+				queue.clear();
+				return availRequests;
+			}
+		}
+		return availRequests;
+	}
     
     // display to check resulted matrix:
     public void printQueue() {
-    	for (List list : queues) 
-    	{
-    		   		
-    		for (int i = 0; i < list.size(); i++)
-    		{
-    			System.out.println(list.get(i));
-    		}
+    	for (List<Request> list : queues) {
+			for (Request request : list) {
+				System.out.println(request);
+			}
     	}
     }
 
