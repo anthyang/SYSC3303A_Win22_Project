@@ -2,7 +2,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.Assert.assertEquals;
 
 /**
  * This is the JUnit test case for the Scheduler in the Elevator system
