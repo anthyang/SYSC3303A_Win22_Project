@@ -53,7 +53,14 @@
       <recent name="" />
     </key>
   </component>
-  <component name="RunManager" selected="JUnit.SchedulerTest">
+  <component name="RunManager" selected="JUnit.ElevatorTest.TestSimMov">
+    <configuration name="Building" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="Building" />
+      <module name="SYSC3303A_Win22_Project" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
     <configuration name="ElevatorTest" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
       <module name="SYSC3303A_Win22_Project" />
       <option name="PACKAGE_NAME" value="" />
@@ -91,23 +98,13 @@
         <option name="Make" enabled="true" />
       </method>
     </configuration>
-    <configuration name="SchedulerTest.TestSchedulerAddServQue" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
-      <module name="SYSC3303A_Win22_Project" />
-      <option name="PACKAGE_NAME" value="" />
-      <option name="MAIN_CLASS_NAME" value="SchedulerTest" />
-      <option name="METHOD_NAME" value="TestSchedulerAddServQue" />
-      <option name="TEST_OBJECT" value="method" />
-      <method v="2">
-        <option name="Make" enabled="true" />
-      </method>
-    </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="JUnit.SchedulerTest" />
         <item itemvalue="JUnit.ElevatorTest.TestSimMov" />
+        <item itemvalue="Application.Building" />
+        <item itemvalue="JUnit.SchedulerTest" />
         <item itemvalue="JUnit.ElevatorTest" />
         <item itemvalue="JUnit.FloorTest" />
-        <item itemvalue="JUnit.SchedulerTest.TestSchedulerAddServQue" />
       </list>
     </recent_temporary>
   </component>

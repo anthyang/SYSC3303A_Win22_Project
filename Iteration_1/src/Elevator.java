@@ -48,8 +48,6 @@ public class Elevator implements Runnable {
      */
     public void simMovement(Direction dir) {
     	System.out.println("Elevator " + this.elevDoorNum + " is moving.");
-		System.out.println("Current schedule: \n");
-		System.out.println("Floor to visit: " +this.floorsToVisit+"\n");
     	try {
     		Thread.sleep(ELEVATOR_MOVEMENT);
     	} catch(InterruptedException e) {
@@ -85,8 +83,6 @@ public class Elevator implements Runnable {
      */
     private void closeDoor() {
     	System.out.println("Elevator " + this.elevDoorNum + " is closing doors at floor " + this.currentFloor);
-		System.out.println("Upcoming schedule:\n" );
-		scheduler.printQueue();
 		try {
     		Thread.sleep(DOOR_MOVEMENT);
     	} catch(InterruptedException e) {
