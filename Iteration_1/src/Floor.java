@@ -14,6 +14,7 @@ public class Floor implements Runnable {
     private static final int SOURCE_FLOOR = 1;
     private static final int DIRECTION_BUTTON = 2;
     private static final int DEST_FLOOR = 3;
+    private boolean finished_reading = false;
 
     private Scheduler scheduler;
 
@@ -59,8 +60,11 @@ public class Floor implements Runnable {
                     this.requestElevator(sourceFloor, destFloor, chosenDirection);
                 }
             }
+            finished_reading = true;
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
+
+    public boolean doneReading() {return finished_reading;}
 }

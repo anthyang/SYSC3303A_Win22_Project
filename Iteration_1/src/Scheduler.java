@@ -3,7 +3,6 @@
  *
  */
 import java.util.*;
-
 public class Scheduler {
 	// store requests by floor and direction:
 	private List<Map<Direction, List<Request>>> floors;
@@ -82,7 +81,7 @@ public class Scheduler {
     public void printQueue() {
     	for (List<Request> list : queues) {
 			for (Request request : list) {
-				System.out.println(request);
+				System.out.println("Destination: "+ request.getDestFloor() + " From: " + request.getSourceFloor() +"\n");
 			}
     	}
     }
