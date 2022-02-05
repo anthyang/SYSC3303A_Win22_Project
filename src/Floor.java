@@ -24,7 +24,7 @@ public class Floor implements Runnable {
      */
     public Floor(Scheduler scheduler, String inputName) {
         this.scheduler = scheduler;
-        this.INPUT_FILE = "Iteration_1/" + inputName;
+        this.INPUT_FILE = inputName;
     }
 
     /**
