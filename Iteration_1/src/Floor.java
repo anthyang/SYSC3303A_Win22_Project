@@ -7,13 +7,14 @@ import java.io.IOException;
  */
 public class Floor implements Runnable {
     /** The input file for the program's requests */
-    public static final String INPUT_FILE = "Iteration_1/src/input";
+    public String INPUT_FILE;
 
     /** Constants to reference different parts of the input file */
     private static final int TIME = 0;
     private static final int SOURCE_FLOOR = 1;
     private static final int DIRECTION_BUTTON = 2;
     private static final int DEST_FLOOR = 3;
+    private boolean finished_reading = false;
 
     private Scheduler scheduler;
 
@@ -21,8 +22,9 @@ public class Floor implements Runnable {
      * Create a new floor subsystem controller
      * @param scheduler The scheduler that will handle requests
      */
-    public Floor(Scheduler scheduler) {
+    public Floor(Scheduler scheduler, String inputName) {
         this.scheduler = scheduler;
+        this.INPUT_FILE = "Iteration_1/src/" + inputName;
     }
 
     /**
@@ -58,8 +60,11 @@ public class Floor implements Runnable {
                     this.requestElevator(sourceFloor, destFloor, chosenDirection);
                 }
             }
+            finished_reading = true;
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
+
+    public boolean doneReading() {return finished_reading;}
 }

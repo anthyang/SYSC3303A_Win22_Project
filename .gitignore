@@ -1,0 +1,7 @@
+# don't commit compiled files
+/bin/
+
+# don't commit intellij files
+/.idea/
+/out/
+*.iml

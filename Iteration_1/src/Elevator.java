@@ -7,6 +7,8 @@ import java.util.*;
  * @id 101145477
  */
 
+
+
 public class Elevator implements Runnable {
     private int elevDoorNum;
     private Boolean floorLamps[];
@@ -53,8 +55,10 @@ public class Elevator implements Runnable {
     	}
     	if(dir == Direction.UP) {
 			currentFloor++;
+			System.out.println("Elevator " + this.elevDoorNum + " is at floor "+this.currentFloor);
 		} else {
 			currentFloor--;
+			System.out.println("Elevator " + this.elevDoorNum + " is at floor "+this.currentFloor);
 		}
     	
     }
@@ -79,7 +83,7 @@ public class Elevator implements Runnable {
      */
     private void closeDoor() {
     	System.out.println("Elevator " + this.elevDoorNum + " is closing doors at floor " + this.currentFloor);
-    	try {
+		try {
     		Thread.sleep(DOOR_MOVEMENT);
     	} catch(InterruptedException e) {
     		System.err.println(e);
@@ -124,4 +128,8 @@ public class Elevator implements Runnable {
     		}
     	}
     }
+
+	public int getCurrentFloor() {return currentFloor;}
+
+	public Set<Integer> getFloorToVisit() {return floorsToVisit;}
 }
