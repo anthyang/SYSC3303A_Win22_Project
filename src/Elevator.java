@@ -6,9 +6,6 @@ import java.util.*;
  * @author Gilles Myny
  * @id 101145477
  */
-
-
-
 public class Elevator implements Runnable {
     private int elevDoorNum;
     private Boolean floorLamps[];
@@ -37,7 +34,8 @@ public class Elevator implements Runnable {
      * Runs the moveElevator() method endlessly.
      */
     public void run() {
-    	while(true) {
+		openDoor();
+		while(true) {
     		moveElevator();
     	}
     }
@@ -96,7 +94,6 @@ public class Elevator implements Runnable {
      * called Request object's from the scheduler.
      */
     public void moveElevator() {
-    	openDoor();
 		List<Request> req = this.scheduler.getAvailRequest();
     	closeDoor();
 
@@ -124,7 +121,9 @@ public class Elevator implements Runnable {
     			openDoor();
     			floorsToVisit.remove(currentFloor);
     			floorLamps[currentFloor - 1] = false;
-    			closeDoor();
+				if (!floorsToVisit.isEmpty()) {
+					closeDoor();
+				}
     		}
     	}
     }
