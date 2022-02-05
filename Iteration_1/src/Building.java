@@ -10,7 +10,7 @@ public class Building {
     public static void main(String[] args) {
         Scheduler scheduler = new Scheduler();
 
-        Floor floor = new Floor(scheduler,"inputTest");
+        Floor floor = new Floor(scheduler,"src/input");
         Elevator elevator = new Elevator(1, scheduler, NUM_FLOORS);
 
         Thread floorSystem = new Thread(floor);
