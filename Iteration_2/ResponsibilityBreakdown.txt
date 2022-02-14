@@ -1,1 +1,32 @@
-here
+Team Member Responsibility Breakdown - Iteration 2:
+
+Team Members:
+- Gilles Myny 101145477
+- Joshua Gatto 101150890
+- Anthony Yang 101130140
+- Nicolas Tuttle 101105699
+- Phuc La 101107588
+
+README.txt
+  Done by: Joshua Gatto
+  
+ResponsibilityBreakdown.txt
+  Done by: Gilles Myny
+  
+UML Class Diagram
+  Done by: Joshua Gatto
+  
+UML Sequence Diagram:
+  Done by: Joshua Gatto
+  
+Test Code:
+  Done by: Phuc La
+  
+Elevator.java:
+  Done by: Gilles Myny
+
+Floor.java:
+  Done by: Nicolas Tuttle
+  
+Scheduler.java:
+  Done by: Anthony Yang
