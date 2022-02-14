@@ -14,10 +14,10 @@ ResponsibilityBreakdown.txt
   Done by: Gilles Myny
   
 UML Class Diagram
-  Done by: Joshua Gatto
+  Done by: Phuc La
   
 UML Sequence Diagram:
-  Done by: Joshua Gatto
+  Done by: Phuc La
   
 State Diagram:
   Done by: Gilles Myny
@@ -34,3 +34,6 @@ Floor.java:
 Scheduler.java:
   Done by: Anthony Yang
   Co-Author: Gilles Myny
+
+Configuration.java:
+  Done by: Phuc La
