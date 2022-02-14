@@ -23,7 +23,7 @@ State Diagram:
   Done by: Gilles Myny
   
 Test Code:
-  Done by: Phuc La
+  Done by: 
   
 Elevator.java:
   Done by: 
