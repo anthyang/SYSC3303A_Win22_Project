@@ -19,6 +19,9 @@ UML Class Diagram
 UML Sequence Diagram:
   Done by: Joshua Gatto
   
+State Diagram:
+  Done by: 
+  
 Test Code:
   Done by: Phuc La
   
