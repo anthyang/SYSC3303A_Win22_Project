@@ -23,7 +23,7 @@ State Diagram:
   Done by: Gilles Myny
   
 Test Code:
-  Done by: 
+  Done by: Nicolas Tuttle
   
 Elevator.java:
   Done by: Anthony Yang
@@ -32,7 +32,7 @@ Floor.java:
   Done by: Gilles Myny
   
 Scheduler.java:
-  Done by: Anthony Yang
+  Done by: Joshua Gatto
   Co-Author: Gilles Myny
 
 Configuration.java:
