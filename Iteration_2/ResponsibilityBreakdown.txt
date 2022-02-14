@@ -8,7 +8,7 @@ Team Members:
 - Phuc La 101107588
 
 README.txt
-  Done by: Joshua Gatto
+  Done by: Phuc La
   
 ResponsibilityBreakdown.txt
   Done by: Gilles Myny
