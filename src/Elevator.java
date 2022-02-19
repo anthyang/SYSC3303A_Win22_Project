@@ -96,6 +96,8 @@ public class Elevator implements Runnable {
     	if (dirLamps != 0) {
     		// notify scheduler if an elevator arrived at a floor
     		notifyArrival();
+    		// turn directon lamp off once arrival is completed.
+    		dirLamps = 0;
     	}
     	System.out.println("Elevator " + this.elevDoorNum + " is opening doors at floor " + this.currentFloor);
     	try {
@@ -175,8 +177,7 @@ public class Elevator implements Runnable {
         System.out.println("elevator: notifying:");
         System.out.println("scheduler: " + sendPacket.getAddress());
         System.out.println("scheduler port: " + sendPacket.getPort());
-        System.out.println("data Length: " + sendPacket.getLength());
-        System.out.print("Containing: ");
+        System.out.print("with data: ");
         System.out.println(new String(sendPacket.getData()));
 
         try {
