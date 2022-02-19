@@ -18,14 +18,16 @@ public class Elevator implements Runnable {
     private Scheduler scheduler;
     private int currentFloor;
     private Set<Integer> floorsToVisit;
+    private int floorCount;
+    private List<Request> req;
     
     // add direction lamps to donate arrival and direction of an elevator at a floor
     private int dirLamps;
     
     // add datagram for notifying scheduler
-    private DatagramPacket sendPacket, receivePacket;
-    private DatagramSocket sendSocket;
-    private int port = 5000;
+   // private DatagramPacket sendPacket, receivePacket;
+   // private DatagramSocket sendSocket;
+   // private int port = 5000;
 
     
     private final int ELEVATOR_MOVEMENT = 2832;
@@ -41,16 +43,19 @@ public class Elevator implements Runnable {
     	this.elevDoorNum = id;
     	this.currentFloor = 1;
     	this.scheduler = sch;
+    	this.floorCount = floorCount;
     	floorLamps = new Boolean[floorCount];
     	floorsToVisit = new HashSet<>();
     	// -1 for down, 0 - not moving, 1 for up:
     	dirLamps = 0; 
-        try {
+    	
+    	// for iteration #3
+      /*  try {
         	sendSocket = new DatagramSocket();
          } catch (SocketException se) {
             se.printStackTrace();
             System.exit(1);
-         }
+         } */
 
     }
 
@@ -125,8 +130,9 @@ public class Elevator implements Runnable {
      * and close, to moving the elevator to specific floors given information packets
      * called Request object's from the scheduler.
      */
-    public void moveElevator() {
-		List<Request> req = this.scheduler.getAvailRequest();
+    public void moveElevator() {	 
+		
+		req = this.scheduler.updateQueue(this);
     	closeDoor();
 
 		int sourceFloor = 1;
@@ -144,7 +150,7 @@ public class Elevator implements Runnable {
     	
     	while(!floorsToVisit.isEmpty()) {
     		simMovement(direction);
-    		List<Request> reqList = this.scheduler.checkRequest(currentFloor, direction);
+    		List<Request> reqList = req;
     		for(Request r : reqList) {
     			floorsToVisit.add(r.getDestFloor());
     			floorLamps[r.getDestFloor() - 1] = true;
@@ -161,6 +167,9 @@ public class Elevator implements Runnable {
     }
     
     public void notifyArrival() {
+    	this.scheduler.serviceComplete(req);   	
+    	
+    	/* for iteration #3
         String s = "arrived at floor " + currentFloor;
         System.out.println("Elevator: notifying scheduler floor arrival");
 
@@ -187,7 +196,7 @@ public class Elevator implements Runnable {
            System.exit(1);
         }
 
-        System.out.println("Elevator: notified Scheduler.\n");
+        System.out.println("Elevator: notified Scheduler.\n"); */
   	
     }
 
