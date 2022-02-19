@@ -1,3 +1,9 @@
+import java.io.IOException;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.net.SocketException;
+import java.net.UnknownHostException;
 import java.util.*;
 
 /**
@@ -11,7 +17,16 @@ public class Elevator implements Runnable {
     private Boolean floorLamps[];
     private Scheduler scheduler;
     private int currentFloor;
-    private Set<Integer> floorsToVisit; 
+    private Set<Integer> floorsToVisit;
+    
+    // add direction lamps to donate arrival and direction of an elevator at a floor
+    private int dirLamps;
+    
+    // add datagram for notifying scheduler
+    private DatagramPacket sendPacket, receivePacket;
+    private DatagramSocket sendSocket;
+    private int port = 5000;
+
     
     private final int ELEVATOR_MOVEMENT = 2832;
     private final int DOOR_MOVEMENT = 4590;
@@ -28,6 +43,15 @@ public class Elevator implements Runnable {
     	this.scheduler = sch;
     	floorLamps = new Boolean[floorCount];
     	floorsToVisit = new HashSet<>();
+    	// -1 for down, 0 - not moving, 1 for up:
+    	dirLamps = 0; 
+        try {
+        	sendSocket = new DatagramSocket();
+         } catch (SocketException se) {
+            se.printStackTrace();
+            System.exit(1);
+         }
+
     }
 
     /**
@@ -54,9 +78,11 @@ public class Elevator implements Runnable {
     	if(dir == Direction.UP) {
 			currentFloor++;
 			System.out.println("Elevator " + this.elevDoorNum + " is at floor "+this.currentFloor);
+			dirLamps = 1;
 		} else {
 			currentFloor--;
 			System.out.println("Elevator " + this.elevDoorNum + " is at floor "+this.currentFloor);
+			dirLamps = -1;
 		}
     	
     }
@@ -66,7 +92,11 @@ public class Elevator implements Runnable {
      * Simulates the doors of the elevator opening given the DOOR_MOVEMENT constant which
      * is calculated to be half the average unloading/loading time.
      */
-    private void openDoor() {
+    private void openDoor() {    	
+    	if (dirLamps != 0) {
+    		// notify scheduler if an elevator arrived at a floor
+    		notifyArrival();
+    	}
     	System.out.println("Elevator " + this.elevDoorNum + " is opening doors at floor " + this.currentFloor);
     	try {
     		Thread.sleep(DOOR_MOVEMENT);
@@ -103,7 +133,7 @@ public class Elevator implements Runnable {
 			sourceFloor = request.getSourceFloor();
 			floorsToVisit.add(request.getDestFloor());
 			floorLamps[request.getDestFloor() - 1] = true;
-			direction = request.getDirection();
+			direction = request.getDirection();			
 		}
     	
     	while(!(currentFloor == sourceFloor)) {
@@ -127,6 +157,39 @@ public class Elevator implements Runnable {
     		}
     	}
     }
+    
+    public void notifyArrival() {
+        String s = "arrived at floor " + currentFloor;
+        System.out.println("Elevator: notifying scheduler floor arrival");
+
+        byte msg[] = s.getBytes();
+
+       try {
+           sendPacket = new DatagramPacket(msg, msg.length,
+                                           InetAddress.getLocalHost(), port);
+        } catch (UnknownHostException e) {
+           e.printStackTrace();
+           System.exit(1);
+        }
+
+        System.out.println("elevator: notifying:");
+        System.out.println("scheduler: " + sendPacket.getAddress());
+        System.out.println("scheduler port: " + sendPacket.getPort());
+        System.out.println("data Length: " + sendPacket.getLength());
+        System.out.print("Containing: ");
+        System.out.println(new String(sendPacket.getData()));
+
+        try {
+           sendSocket.send(sendPacket);
+        } catch (IOException e) {
+           e.printStackTrace();
+           System.exit(1);
+        }
+
+        System.out.println("Elevator: notified Scheduler.\n");
+  	
+    }
+
 
 	public int getCurrentFloor() {return currentFloor;}
 
