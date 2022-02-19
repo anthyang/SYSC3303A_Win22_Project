@@ -19,8 +19,8 @@ public class Elevator implements Runnable {
     private int currentFloor;
     private Set<Integer> floorsToVisit;
     private int floorCount;
-    private List<Request> req;
-    
+    private Request r;
+        
     // add direction lamps to donate arrival and direction of an elevator at a floor
     private int dirLamps;
     
@@ -47,7 +47,7 @@ public class Elevator implements Runnable {
     	floorLamps = new Boolean[floorCount];
     	floorsToVisit = new HashSet<>();
     	// -1 for down, 0 - not moving, 1 for up:
-    	dirLamps = 0; 
+    	dirLamps = 0;     	
     	
     	// for iteration #3
       /*  try {
@@ -88,7 +88,7 @@ public class Elevator implements Runnable {
 			currentFloor--;
 			System.out.println("Elevator " + this.elevDoorNum + " is at floor "+this.currentFloor);
 			dirLamps = -1;
-		}
+		}    	
     	
     }
 
@@ -99,7 +99,7 @@ public class Elevator implements Runnable {
      */
     private void openDoor() {    	
     	if (dirLamps != 0) {
-    		// notify scheduler if an elevator arrived at a floor
+    		// notify scheduler if an elevator arrived at a floor;
     		notifyArrival();
     		// turn directon lamp off once arrival is completed.
     		dirLamps = 0;
@@ -132,7 +132,11 @@ public class Elevator implements Runnable {
      */
     public void moveElevator() {	 
 		
-		req = this.scheduler.updateQueue(this);
+    	List<Request> req = this.scheduler.updateQueue(this);
+		// stop the elevator thread once request is null returned from scheduler
+		if (req == null) {
+			System.exit(0);			
+		}
     	closeDoor();
 
 		int sourceFloor = 1;
@@ -144,8 +148,8 @@ public class Elevator implements Runnable {
 			direction = request.getDirection();			
 		}
     	
-    	while(!(currentFloor == sourceFloor)) {
-			simMovement((sourceFloor > currentFloor) ? Direction.UP : Direction.DOWN);
+    	while(!(currentFloor == sourceFloor)) {    		
+			simMovement((sourceFloor > currentFloor) ? Direction.UP : Direction.DOWN);			
 		}
     	
     	while(!floorsToVisit.isEmpty()) {
@@ -156,6 +160,7 @@ public class Elevator implements Runnable {
     			floorLamps[r.getDestFloor() - 1] = true;
     		}
     		if((!reqList.isEmpty()) || (floorsToVisit.contains(currentFloor))) {
+    			r = new Request(currentFloor, sourceFloor, direction);
     			openDoor();
     			floorsToVisit.remove(currentFloor);
     			floorLamps[currentFloor - 1] = false;
@@ -166,8 +171,8 @@ public class Elevator implements Runnable {
     	}
     }
     
-    public void notifyArrival() {
-    	this.scheduler.serviceComplete(req);   	
+    public void notifyArrival() {      	
+    	this.scheduler.serviceComplete(r);   	
     	
     	/* for iteration #3
         String s = "arrived at floor " + currentFloor;
