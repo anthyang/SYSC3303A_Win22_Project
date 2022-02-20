@@ -1,90 +1,54 @@
-/**
- * Scheduler class to coordinate the elevator and floor queues.
- *
- */
 import java.util.*;
+import java.util.stream.Collectors;
+
 public class Scheduler {
-	// store requests by floor and direction:
-	private List<Map<Direction, List<Request>>> floors;
-	// store requests in a long list -- linked to floors
-	private List<List<Request>> queues;
 
-	//constructor to initialize queues, list, request.
+	private Queue<Request> masterQueue;
+	private Map<Elevator, List<Request>> elevQueueMap;
+	private boolean doneReceiving;
+
 	public Scheduler() {
-		floors = new ArrayList<>();
-		queues = new ArrayList<>();
-		for (int i = 0; i < Building.NUM_FLOORS; i++) {
-			Map<Direction, List<Request>> directionMap = new HashMap<>();
-			List<Request> upQueue = new ArrayList<>();
-			List<Request> downQueue = new ArrayList<>();
-			directionMap.put(Direction.UP, upQueue);
-			directionMap.put(Direction.DOWN, downQueue);
-			floors.add(directionMap);
+		masterQueue = new LinkedList<>();
+		elevQueueMap = new HashMap<>(Building.NUM_ELEVATORS);
+		doneReceiving = false;
+	}
 
-			queues.add(upQueue);
-			queues.add(downQueue);
+	public void addExternalRequest(Request request) {
+		masterQueue.add(request);
+	}
+
+	public void registerElevator(Elevator e) {
+		elevQueueMap.put(e, new ArrayList<>());
+	}
+
+	public void serviceComplete(Elevator e, int destFloor) {
+		elevQueueMap.get(e).removeIf(request -> request.getDestFloor() != destFloor);
+	}
+
+	public List<Request> updateQueue(Elevator e, int currentFloor) {
+		if (doneReceiving && masterQueue.isEmpty()) {
+			return null;
 		}
-	}
 
-	private List<Request> getQueue(int floor, Direction direction) {
-		return floors.get(floor - 1).get(direction);
-	}
+		List<Request> elevatorQueue = elevQueueMap.get(e);
 
-	// addition of source floor, destination floor, and direction to queue.
-	public synchronized void addToServiceQueue(int sourceFloor, int destFloor, Direction direction) {
-		Request req = new Request(sourceFloor, destFloor, direction);
-		getQueue(sourceFloor, direction).add(req);
+		List<Request> newRequests;
+		if (elevatorQueue.isEmpty()) {
+			newRequests = new ArrayList<>();
+			newRequests.add(masterQueue.remove());
+		} else {
+			newRequests = masterQueue.stream().filter(
+					request -> request.getSourceFloor() == currentFloor && request.getDirection() == e.getDirection()
+			).collect(Collectors.toList());
+			masterQueue.removeAll(newRequests);
+		}
 
-		notifyAll();
+		elevatorQueue.addAll(newRequests);
+		return elevatorQueue;
 	}
 	
-	// check specific request queue given any floor number and direction
-	public List<Request> checkRequest(int floorNum, Direction direction) {
-		List<Request> aRequest = new ArrayList<>();
-		List<Request> floorQueue = getQueue(floorNum, direction);
-		if (floorQueue.isEmpty()) {
-			System.out.println("No request in the direction " + direction + " from the given floor " + floorNum);
-		} else {
-			aRequest = new ArrayList<>(floorQueue);
-			floorQueue.clear();
-		}
-
-		return aRequest;
-    }
-
-	private boolean allQueuesEmpty() {
-		return queues.stream().allMatch(List::isEmpty);
+	//called by floor to end scheduler
+	public void endActions() {
+		doneReceiving = true;
 	}
-    
-	// return a request if there is a request in queue
-	public synchronized List<Request> getAvailRequest() {
-		while (allQueuesEmpty()) {
-			try {
-				wait();
-			} catch (InterruptedException e) {
-				System.out.println("An interrupted exception error occurs.");
-			}
-		}
-
-		List<Request> availRequests = new ArrayList<>();
-		for (List<Request> queue : queues) {
-			if (!queue.isEmpty()) {
-				availRequests = new ArrayList<>(queue);
-				queue.clear();
-				return availRequests;
-			}
-		}
-		return availRequests;
-	}
-    
-    // display to check resulted matrix:
-    public void printQueue() {
-    	for (List<Request> list : queues) {
-			for (Request request : list) {
-				System.out.println("Destination: "+ request.getDestFloor() + " From: " + request.getSourceFloor() +"\n");
-			}
-    	}
-    }
-
 }
-

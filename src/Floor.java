@@ -63,6 +63,7 @@ public class Floor implements Runnable {
                 }
             }
             finished_reading = true;
+            scheduler.endActions();
         } catch (IOException e) {
             e.printStackTrace();
         }

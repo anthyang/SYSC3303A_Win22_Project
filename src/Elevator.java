@@ -20,6 +20,7 @@ public class Elevator implements Runnable {
     private Set<Integer> floorsToVisit;
     private int floorCount;
     private Request r;
+	private Direction direction;
         
     // add direction lamps to donate arrival and direction of an elevator at a floor
     private int dirLamps;
@@ -43,6 +44,7 @@ public class Elevator implements Runnable {
     	this.elevDoorNum = id;
     	this.currentFloor = 1;
     	this.scheduler = sch;
+		sch.registerElevator(this);
     	this.floorCount = floorCount;
     	floorLamps = new Boolean[floorCount];
     	floorsToVisit = new HashSet<>();
@@ -132,7 +134,7 @@ public class Elevator implements Runnable {
      */
     public void moveElevator() {	 
 		
-    	List<Request> req = this.scheduler.updateQueue(this);
+    	List<Request> req = this.scheduler.updateQueue(this, this.currentFloor);
 		// stop the elevator thread once request is null returned from scheduler
 		if (req == null) {
 			System.exit(0);			
@@ -140,7 +142,7 @@ public class Elevator implements Runnable {
     	closeDoor();
 
 		int sourceFloor = 1;
-		Direction direction = Direction.NOT_MOVING;
+		direction = Direction.NOT_MOVING;
 		for (Request request : req) {
 			sourceFloor = request.getSourceFloor();
 			floorsToVisit.add(request.getDestFloor());
@@ -172,7 +174,7 @@ public class Elevator implements Runnable {
     }
     
     public void notifyArrival() {      	
-    	this.scheduler.serviceComplete(r);   	
+    	this.scheduler.serviceComplete(this, this.currentFloor);
     	
     	/* for iteration #3
         String s = "arrived at floor " + currentFloor;
@@ -205,6 +207,9 @@ public class Elevator implements Runnable {
   	
     }
 
+	public Direction getDirection() {
+		return direction;
+	}
 
 	public int getCurrentFloor() {return currentFloor;}
 
