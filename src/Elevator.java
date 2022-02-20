@@ -18,8 +18,8 @@ public class Elevator implements Runnable {
     private Scheduler scheduler;
     private int currentFloor;
     private Set<Integer> floorsToVisit;
+	private List<Request> req;
     private int floorCount;
-    private Request r;
 	private Direction direction;
         
     // add direction lamps to donate arrival and direction of an elevator at a floor
@@ -62,8 +62,10 @@ public class Elevator implements Runnable {
      */
     public void run() {
 		openDoor();
-		while(true) {
+		req = this.scheduler.updateQueue(this, this.currentFloor);
+		while (req != null) {
     		moveElevator();
+			req = this.scheduler.updateQueue(this, this.currentFloor);
     	}
     }
     
@@ -128,13 +130,7 @@ public class Elevator implements Runnable {
      * and close, to moving the elevator to specific floors given information packets
      * called Request object's from the scheduler.
      */
-    public void moveElevator() {	 
-		
-    	List<Request> req = this.scheduler.updateQueue(this, this.currentFloor);
-		// stop the elevator thread once request is null returned from scheduler
-		if (req == null) {
-			System.exit(0);			
-		}
+    public void moveElevator() {
     	closeDoor();
 
 		int sourceFloor = 1;
@@ -147,18 +143,17 @@ public class Elevator implements Runnable {
 		}
     	
     	while(!(currentFloor == sourceFloor)) {    		
-			simMovement((sourceFloor > currentFloor) ? Direction.UP : Direction.DOWN);			
+			simMovement((sourceFloor > currentFloor) ? Direction.UP : Direction.DOWN);
 		}
     	
     	while(!floorsToVisit.isEmpty()) {
     		simMovement(direction);
-    		List<Request> reqList = req;
-    		for(Request r : reqList) {
+			req = scheduler.updateQueue(this, currentFloor);
+    		for(Request r : req) {
     			floorsToVisit.add(r.getDestFloor());
     			floorLamps[r.getDestFloor() - 1] = true;
     		}
-    		if((!reqList.isEmpty()) || (floorsToVisit.contains(currentFloor))) {
-    			r = new Request(currentFloor, sourceFloor, direction);
+    		if((reqAtCurrFloor()) || (floorsToVisit.contains(currentFloor))) {
     			openDoor();
     			floorsToVisit.remove(currentFloor);
     			floorLamps[currentFloor - 1] = false;
@@ -168,6 +163,10 @@ public class Elevator implements Runnable {
     		}
     	}
     }
+
+	private boolean reqAtCurrFloor() {
+		return req.stream().anyMatch(request -> request.getSourceFloor() == currentFloor);
+	}
     
     public void notifyArrival() {      	
     	this.scheduler.serviceComplete(this, this.currentFloor);
@@ -209,5 +208,7 @@ public class Elevator implements Runnable {
 
 	public int getCurrentFloor() {return currentFloor;}
 
-	public Set<Integer> getFloorToVisit() {return floorsToVisit;}
+	public Set<Integer> getFloorToVisit() {
+		return floorsToVisit;
+	}
 }

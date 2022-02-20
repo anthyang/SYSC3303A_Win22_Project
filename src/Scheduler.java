@@ -22,11 +22,11 @@ public class Scheduler {
 	}
 
 	public void serviceComplete(Elevator e, int destFloor) {
-		elevQueueMap.get(e).removeIf(request -> request.getDestFloor() != destFloor);
+		elevQueueMap.get(e).removeIf(request -> request.getDestFloor() == destFloor);
 	}
 
 	public List<Request> updateQueue(Elevator e, int currentFloor) {
-		if (doneReceiving && masterQueue.isEmpty()) {
+		if (doneReceiving && masterQueue.isEmpty() && elevQueueMap.get(e).isEmpty()) {
 			return null;
 		}
 
@@ -34,15 +34,20 @@ public class Scheduler {
 
 		List<Request> newRequests;
 		if (elevatorQueue.isEmpty()) {
-			newRequests = new ArrayList<>();
-			newRequests.add(masterQueue.remove());
+			newRequests = masterQueue.stream().filter(
+					request -> request.getSourceFloor() == currentFloor
+			).collect(Collectors.toList());
+
+			if (newRequests.isEmpty()) {
+				newRequests = Collections.singletonList(masterQueue.peek());
+			}
 		} else {
 			newRequests = masterQueue.stream().filter(
 					request -> request.getSourceFloor() == currentFloor && request.getDirection() == e.getDirection()
 			).collect(Collectors.toList());
-			masterQueue.removeAll(newRequests);
 		}
 
+		masterQueue.removeAll(newRequests);
 		elevatorQueue.addAll(newRequests);
 		return elevatorQueue;
 	}

@@ -28,7 +28,6 @@ public class Floor implements Runnable {
      * @param direction Direction pressed on the floor controller
      */
     public void requestElevator(int sourceFloor, int destFloor, Direction direction) {
-        //this.scheduler.addToServiceQueue(sourceFloor, destFloor, direction);
     	Request r = new Request(sourceFloor, destFloor, direction);
         this.scheduler.addExternalRequest(r);
     }
