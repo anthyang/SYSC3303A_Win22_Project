@@ -7,13 +7,7 @@ import java.io.IOException;
  */
 public class Floor implements Runnable {
     /** The input file for the program's requests */
-    public String INPUT_FILE;
-
-    /** Constants to reference different parts of the input file */
-    private static final int TIME = 0;
-    private static final int SOURCE_FLOOR = 1;
-    private static final int DIRECTION_BUTTON = 2;
-    private static final int DEST_FLOOR = 3;
+    public String inputFile;
     private boolean finished_reading = false;
 
     private Scheduler scheduler;
@@ -24,7 +18,7 @@ public class Floor implements Runnable {
      */
     public Floor(Scheduler scheduler, String inputName) {
         this.scheduler = scheduler;
-        this.INPUT_FILE = inputName;
+        this.inputFile = inputName;
     }
 
     /**
@@ -48,16 +42,16 @@ public class Floor implements Runnable {
      * Parse the input file and queue requests for elevators
      */
     private void readInputFile() {
-        try (BufferedReader br = new BufferedReader(new FileReader(INPUT_FILE))) {
+        try (BufferedReader br = new BufferedReader(new FileReader(inputFile))) {
             String line;
             while ((line = br.readLine()) != null) {
                 // Ignore comment lines
                 if (!line.startsWith("#")) {
                     String[] instructions = line.split(" ");
 
-                    Direction chosenDirection = Direction.get(instructions[DIRECTION_BUTTON]);
-                    int sourceFloor = Integer.parseInt(instructions[SOURCE_FLOOR]);
-                    int destFloor = Integer.parseInt(instructions[DEST_FLOOR]);
+                    Direction chosenDirection = Direction.get(instructions[Config.DIRECTION_BUTTON]);
+                    int sourceFloor = Integer.parseInt(instructions[Config.SOURCE_FLOOR]);
+                    int destFloor = Integer.parseInt(instructions[Config.DEST_FLOOR]);
 
                     this.requestElevator(sourceFloor, destFloor, chosenDirection);
                 }

@@ -9,7 +9,7 @@ public class Scheduler {
 
 	public Scheduler() {
 		masterQueue = new LinkedList<>();
-		elevQueueMap = new HashMap<>(Building.NUM_ELEVATORS);
+		elevQueueMap = new HashMap<>(Config.NUMBER_OF_ELEVATORS);
 		doneReceiving = false;
 	}
 

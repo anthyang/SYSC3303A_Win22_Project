@@ -2,16 +2,11 @@
  * This is a general controller for the entire system
  */
 public class Building {
-    /** Number of elevators in the building */
-    public static final int NUM_ELEVATORS = 1;
-    /** Number of floors in the building */
-    public static final int NUM_FLOORS = 7;
-
     public static void main(String[] args) {
         Scheduler scheduler = new Scheduler();
 
         Floor floor = new Floor(scheduler,"src/input");
-        Elevator elevator = new Elevator(1, scheduler, NUM_FLOORS);
+        Elevator elevator = new Elevator(1, scheduler, Config.NUMBER_OF_FLOORS);
 
         Thread floorSystem = new Thread(floor);
         floorSystem.start();

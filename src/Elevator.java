@@ -30,10 +30,6 @@ public class Elevator implements Runnable {
    // private DatagramSocket sendSocket;
    // private int port = 5000;
 
-    
-    private final int ELEVATOR_MOVEMENT = 2832;
-    private final int DOOR_MOVEMENT = 4590;
-
     /**
      * The Elevator constructor initializes all necessary variables.
      * @param id represents an Integer of the elevator's identification number.
@@ -78,7 +74,7 @@ public class Elevator implements Runnable {
     public void simMovement(Direction dir) {
     	System.out.println("Elevator " + this.elevDoorNum + " is moving.");
     	try {
-    		Thread.sleep(ELEVATOR_MOVEMENT);
+    		Thread.sleep(Config.ELEVATOR_MOVEMENT);
     	} catch(InterruptedException e) {
     		System.err.println(e);
     	}
@@ -108,7 +104,7 @@ public class Elevator implements Runnable {
     	}
     	System.out.println("Elevator " + this.elevDoorNum + " is opening doors at floor " + this.currentFloor);
     	try {
-    		Thread.sleep(DOOR_MOVEMENT);
+    		Thread.sleep(Config.DOOR_MOVEMENT);
     	} catch(InterruptedException e) {
     		System.err.println(e);
     	}
@@ -121,7 +117,7 @@ public class Elevator implements Runnable {
     private void closeDoor() {
     	System.out.println("Elevator " + this.elevDoorNum + " is closing doors at floor " + this.currentFloor);
 		try {
-    		Thread.sleep(DOOR_MOVEMENT);
+    		Thread.sleep(Config.DOOR_MOVEMENT);
     	} catch(InterruptedException e) {
     		System.err.println(e);
     	}
