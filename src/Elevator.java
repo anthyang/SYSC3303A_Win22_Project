@@ -4,6 +4,9 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.sql.Timestamp;
+import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 /**
@@ -72,7 +75,7 @@ public class Elevator implements Runnable {
      * @param dir represents Direction enumerator of the elevator.
      */
     public void simMovement(Direction dir) {
-    	System.out.println("Elevator " + this.elevDoorNum + " is moving.");
+    	System.out.println(getTimestamp() + " Elevator " + this.elevDoorNum + " is moving.");
     	try {
     		Thread.sleep(Config.ELEVATOR_MOVEMENT);
     	} catch(InterruptedException e) {
@@ -80,16 +83,15 @@ public class Elevator implements Runnable {
     	}
     	if(dir == Direction.UP) {
 			currentFloor++;
-			System.out.println("Elevator " + this.elevDoorNum + " is at floor "+this.currentFloor);
+			System.out.println(getTimestamp() + " Elevator " + this.elevDoorNum + " is at floor "+this.currentFloor);
 			dirLamps = 1;
 		} else {
 			currentFloor--;
-			System.out.println("Elevator " + this.elevDoorNum + " is at floor "+this.currentFloor);
+			System.out.println(getTimestamp() + " Elevator " + this.elevDoorNum + " is at floor "+this.currentFloor);
 			dirLamps = -1;
 		}    	
     	
     }
-
     
     /**
      * Simulates the doors of the elevator opening given the DOOR_MOVEMENT constant which
@@ -102,7 +104,7 @@ public class Elevator implements Runnable {
     		// turn directon lamp off once arrival is completed.
     		dirLamps = 0;
     	}
-    	System.out.println("Elevator " + this.elevDoorNum + " is opening doors at floor " + this.currentFloor);
+    	System.out.println(getTimestamp() + " Elevator " + this.elevDoorNum + " is opening doors at floor " + this.currentFloor);
     	try {
     		Thread.sleep(Config.DOOR_MOVEMENT);
     	} catch(InterruptedException e) {
@@ -110,12 +112,20 @@ public class Elevator implements Runnable {
     	}
     }
 
+	/**
+	 * Get a string representation of the current time
+	 * @return a timestamp
+	 */
+	private String getTimestamp() {
+		return Timestamp.from(ZonedDateTime.now().toInstant().truncatedTo(ChronoUnit.SECONDS)).toString();
+	}
+
     /**
      * Simulates the doors of the elevator closing given the DOOR_MOVEMENT constant which
      * is calculated to be half the average unloading/loading time.
      */
     private void closeDoor() {
-    	System.out.println("Elevator " + this.elevDoorNum + " is closing doors at floor " + this.currentFloor);
+    	System.out.println(getTimestamp() + " Elevator " + this.elevDoorNum + " is closing doors at floor " + this.currentFloor);
 		try {
     		Thread.sleep(Config.DOOR_MOVEMENT);
     	} catch(InterruptedException e) {
@@ -162,11 +172,18 @@ public class Elevator implements Runnable {
     	}
     }
 
+	/**
+	 * Check whether there is a pending request at the current floor
+	 * @return true if a request is pending, false otherwise
+	 */
 	private boolean reqAtCurrFloor() {
 		return req.stream().anyMatch(request -> request.getSourceFloor() == currentFloor);
 	}
-    
-    public void notifyArrival() {      	
+
+	/**
+	 * Notify the scheduler of arrival at a floor
+	 */
+	public void notifyArrival() {
     	this.scheduler.serviceComplete(this, this.currentFloor);
     	
     	/* for iteration #3
@@ -200,12 +217,24 @@ public class Elevator implements Runnable {
   	
     }
 
+	/**
+	 * Get the elevator's direction
+	 * @return the current direction
+	 */
 	public Direction getDirection() {
 		return direction;
 	}
 
+	/**
+	 * Get the elevator's current floor
+	 * @return the current floor
+	 */
 	public int getCurrentFloor() {return currentFloor;}
 
+	/**
+	 * Get the set of floors to visit
+	 * @return the floors to visit
+	 */
 	public Set<Integer> getFloorToVisit() {
 		return floorsToVisit;
 	}
