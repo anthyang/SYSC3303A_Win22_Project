@@ -13,8 +13,9 @@ public class Scheduler {
 		doneReceiving = false;
 	}
 
-	public void addExternalRequest(Request request) {
+	public synchronized void addExternalRequest(Request request) {
 		masterQueue.add(request);
+		notifyAll();
 	}
 
 	public void registerElevator(Elevator e) {
@@ -25,9 +26,17 @@ public class Scheduler {
 		elevQueueMap.get(e).removeIf(request -> request.getDestFloor() == destFloor);
 	}
 
-	public List<Request> updateQueue(Elevator e, int currentFloor) {
+	public synchronized List<Request> updateQueue(Elevator e, int currentFloor) {
 		if (doneReceiving && masterQueue.isEmpty() && elevQueueMap.get(e).isEmpty()) {
 			return null;
+		}
+
+		while (masterQueue.isEmpty()) {
+			try {
+				wait();
+			} catch (InterruptedException ex) {
+				ex.printStackTrace();
+			}
 		}
 
 		List<Request> elevatorQueue = elevQueueMap.get(e);

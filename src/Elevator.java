@@ -19,7 +19,6 @@ public class Elevator implements Runnable {
     private int currentFloor;
     private Set<Integer> floorsToVisit;
 	private List<Request> req;
-    private int floorCount;
 	private Direction direction;
         
     // add direction lamps to donate arrival and direction of an elevator at a floor
@@ -41,7 +40,6 @@ public class Elevator implements Runnable {
     	this.currentFloor = 1;
     	this.scheduler = sch;
 		sch.registerElevator(this);
-    	this.floorCount = floorCount;
     	floorLamps = new Boolean[floorCount];
     	floorsToVisit = new HashSet<>();
     	// -1 for down, 0 - not moving, 1 for up:

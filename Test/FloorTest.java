@@ -1,8 +1,6 @@
 import org.junit.jupiter.api.Test;
 
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * This is the JUnit test case for the floor subsystem in the elevator system
@@ -13,14 +11,12 @@ class FloorTest {
 
     /**
      * This test is to test if the floor subsystem is able to read an input file or not
-     *
-     * @throws InterruptedException
      */
     @Test
-    void TestFloor() throws InterruptedException {
+    public void TestFloor() throws InterruptedException {
         Thread floor = new Thread(flo);
         floor.start();
         Thread.sleep(1000);
-        assertEquals(true, flo.doneReading());
+        assertTrue(flo.doneReading());
     }
 }
