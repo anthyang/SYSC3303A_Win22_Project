@@ -1,108 +1,54 @@
 import java.util.*;
+import java.util.stream.Collectors;
 
-public class Scheduler{
+public class Scheduler {
 
-	private ArrayList<Request> masterQueue;//not sure there is much use in a master queue
-	private Hashtable<Elevator, ArrayList> elevQueueMap;
-	private int FLOORS;
-	private int ELEVATORS;
-	private boolean endCheck = false;
+	private Queue<Request> masterQueue;
+	private Map<Elevator, List<Request>> elevQueueMap;
+	private boolean doneReceiving;
 
-	public Scheduler(){
-		FLOORS = 7;
-		ELEVATORS = 1;
-		masterQueue = new ArrayList((2 * FLOORS) - 2);
-		elevQueueMap = new Hashtable(ELEVATORS);
+	public Scheduler() {
+		masterQueue = new LinkedList<>();
+		elevQueueMap = new HashMap<>(Building.NUM_ELEVATORS);
+		doneReceiving = false;
 	}
 
-	public Scheduler(int floors, int elevators){
-		FLOORS = floors;
-		ELEVATORS = elevators;
-		masterQueue = new ArrayList((2 * floors) - 2);
-		elevQueueMap = new Hashtable(elevators);
-	}
-
-	public void addExternalRequest(Request request){
-		if(endCheck) {
-			this.stop();
-		}
+	public void addExternalRequest(Request request) {
 		masterQueue.add(request);
-		for(Elevator e : elevQueueMap.keySet()){
-			ArrayList a = elevQueueMap.get(e);
-			a.add(request);
-			sort(e, a);
-		}
 	}
 
-	public void addInternalRequest(Elevator e, Request request){
-		if(endCheck) {
-			this.stop();
-		}
-		elevQueueMap.get(e).add(request);
-		sort(e, elevQueueMap.get(e));
+	public void registerElevator(Elevator e) {
+		elevQueueMap.put(e, new ArrayList<>());
 	}
 
-	public void serviceComplete(int destFloor){
-		//masterQueue.remove(request);
-		for(Elevator e : elevQueueMap.keySet()){//for each elevator in the map,
-			ArrayList a = elevQueueMap.get(e);
-			elevQueueMap.get(e).remove(request);//remove the request from the respective queue
-			sort(e, a);//sort the queue
-		}
+	public void serviceComplete(Elevator e, int destFloor) {
+		elevQueueMap.get(e).removeIf(request -> request.getDestFloor() != destFloor);
 	}
 
-	public ArrayList<Request> updateQueue(Elevator e){
-		return elevQueueMap.get(e);
-	}
-
-	private void sort(Elevator e, ArrayList<Request> q){
-		Boolean sorted = true;
-		while(sorted){
-		sorted = true;
-			for(int i = 0; i < q.size(); i++){
-				if(q.get(i).getDirection.equals(q.get(i + 1).getDirection)){//sorting direction of request
-					swap(q, i);
-					sorted = false;
-				}
-			}
+	public List<Request> updateQueue(Elevator e, int currentFloor) {
+		if (doneReceiving && masterQueue.isEmpty()) {
+			return null;
 		}
-		while(sorted) {
-			sorted = true;
-			for(int i = 0; i < q.size(); i++){
-				if(q.get(i) != q.get(i + 1)){//if direction of request != direction of the next, skip (it's the middle of the queue)
-					i++;
-				}
-				switch(q.get(i).getDirection()){//sorting floor number of request
-					case UP:
-						if(q.get(i).getFloor() > q.get(i + 1).getFloor()){//lower floor numbers should be at the front of the "up" section
-							swap(q, i);
-						}
-					case DOWN:
-						if(q.get(i).getFloor() < q.get(i + 1).getFloor()){//higher floors should be at the end of the "down" section
-							swap(q, i);
-						}
-				}
-			}
-		}
-	}
 
-	/*
-	* sorting is the scheduling of this implementation
-	*/
-	private void swap(ArrayList<Request> q, int index){
-		Request temp = q.get(index);
-		q.add(index, q.get(index + 1));
-		q.add(index + 1, temp);
+		List<Request> elevatorQueue = elevQueueMap.get(e);
+
+		List<Request> newRequests;
+		if (elevatorQueue.isEmpty()) {
+			newRequests = new ArrayList<>();
+			newRequests.add(masterQueue.remove());
+		} else {
+			newRequests = masterQueue.stream().filter(
+					request -> request.getSourceFloor() == currentFloor && request.getDirection() == e.getDirection()
+			).collect(Collectors.toList());
+			masterQueue.removeAll(newRequests);
+		}
+
+		elevatorQueue.addAll(newRequests);
+		return elevatorQueue;
 	}
 	
 	//called by floor to end scheduler
 	public void endActions() {
-		if(masterQueue.isEmpty()) {
-			endCheck = true;
-		}
-	}
-	
-	private void stop() {
-		exit = true;
+		doneReceiving = true;
 	}
 }
