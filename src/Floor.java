@@ -62,5 +62,9 @@ public class Floor implements Runnable {
         }
     }
 
+    /**
+     * Check if the subsystem has finished reading the input
+     * @return true if the system is done, false otherwise
+     */
     public boolean doneReading() {return finished_reading;}
 }

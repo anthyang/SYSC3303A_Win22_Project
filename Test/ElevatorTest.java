@@ -1,27 +1,26 @@
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * This is the JUnit test case for the Elevator subsystem in the Elevator system
  */
 class ElevatorTest {
-    Scheduler sche = new Scheduler();
-    Elevator ele = new Elevator(0, sche, 7);
+    private Scheduler sche;
+
+    @BeforeEach
+    public void setUp() {
+        sche = new Scheduler();
+        sche.addExternalRequest(new Request(2, 1, Direction.UP));
+    }
 
     /**
      * This test is to test for the simulation of movement using the simMovement() method in the elevator class
-     *
-     * @throws InterruptedException in case the Thread is interrupted
      */
     @Test
-    void TestSimMov() throws InterruptedException {
-        Thread elevator = new Thread(ele);
-        elevator.start();
-        Thread.sleep(1000);
-        //Thread.currentThread().interrupt();
+    public void testSimMov() {
+        Elevator ele = new Elevator(0, sche, 7);
         ele.simMovement(Direction.UP);
         assertEquals(2, ele.getCurrentFloor());
         ele.simMovement(Direction.UP);

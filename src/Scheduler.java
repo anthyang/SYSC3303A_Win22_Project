@@ -1,33 +1,67 @@
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * The scheduler class
+ */
 public class Scheduler {
 
 	private Queue<Request> masterQueue;
 	private Map<Elevator, List<Request>> elevQueueMap;
 	private boolean doneReceiving;
 
+	/**
+	 * Scheduler constructor
+	 */
 	public Scheduler() {
 		masterQueue = new LinkedList<>();
 		elevQueueMap = new HashMap<>(Config.NUMBER_OF_ELEVATORS);
 		doneReceiving = false;
 	}
 
-	public void addExternalRequest(Request request) {
+	/**
+	 * Add a request to be serviced
+	 * @param request the request to add
+	 */
+	public synchronized void addExternalRequest(Request request) {
 		masterQueue.add(request);
+		notifyAll();
 	}
 
+	/**
+	 * Register an elevator with the scheduler
+	 * @param e the elevator to register
+	 */
 	public void registerElevator(Elevator e) {
 		elevQueueMap.put(e, new ArrayList<>());
 	}
 
+	/**
+	 * Mark service complete by an elevator
+	 * @param e the elevator that has serviced the floor
+	 * @param destFloor the floor the elevator has serviced
+	 */
 	public void serviceComplete(Elevator e, int destFloor) {
 		elevQueueMap.get(e).removeIf(request -> request.getDestFloor() == destFloor);
 	}
 
-	public List<Request> updateQueue(Elevator e, int currentFloor) {
+	/**
+	 * Get an up to date version of the elevator's queue
+	 * @param e the elevator
+	 * @param currentFloor the elevator's current floor
+	 * @return the elevator's queue
+	 */
+	public synchronized List<Request> updateQueue(Elevator e, int currentFloor) {
 		if (doneReceiving && masterQueue.isEmpty() && elevQueueMap.get(e).isEmpty()) {
 			return null;
+		}
+
+		while (masterQueue.isEmpty() && elevQueueMap.isEmpty()) {
+			try {
+				wait();
+			} catch (InterruptedException ex) {
+				ex.printStackTrace();
+			}
 		}
 
 		List<Request> elevatorQueue = elevQueueMap.get(e);
@@ -51,8 +85,10 @@ public class Scheduler {
 		elevatorQueue.addAll(newRequests);
 		return elevatorQueue;
 	}
-	
-	//called by floor to end scheduler
+
+	/**
+	 * Called by floor to end scheduler
+	 */
 	public void endActions() {
 		doneReceiving = true;
 	}
