@@ -8,16 +8,16 @@ Team Members:
 - Phuc La 101107588
 
 README.txt
-  Done by: Phuc La
+  Done by: Gilles Myny
   
 ResponsibilityBreakdown.txt
   Done by: Gilles Myny
   
 UML Class Diagram
-  Done by: Phuc La
+  Done by: Gilles Myny
   
 UML Sequence Diagram:
-  Done by: Phuc La
+  Done by: Gilles Myny
   
 State Diagram:
   Done by: Gilles Myny
