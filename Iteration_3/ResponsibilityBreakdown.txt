@@ -20,20 +20,19 @@ UML Sequence Diagram:
   Done by: Gilles Myny
   
 State Diagram:
-  Done by: 
-  
+  Done by: Phuc La
+
 Test Code:
-  Done by: Nicolas Tuttle
+  Done by: Joshua Gatto
   
 Elevator.java:
-  Done by: Anthony Yang
+  Done by: Nicolas Tuttle
 
 Floor.java:
-  Done by: 
+  Done by: Phuc La
   
 Scheduler.java:
-  Done by: Joshua Gatto
-  Co-Author: 
+  Done by: Anthony Yang
 
 Configuration.java:
   Done by: Phuc La
