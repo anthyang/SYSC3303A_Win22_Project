@@ -67,4 +67,10 @@ public class Floor implements Runnable {
      * @return true if the system is done, false otherwise
      */
     public boolean doneReading() {return finished_reading;}
+
+    public static void main(String[] args) {
+        Floor floor = new Floor(scheduler,"src/input");
+        Thread floorSystem = new Thread(floor);
+        floorSystem.start();
+    }
 }

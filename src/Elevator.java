@@ -238,4 +238,10 @@ public class Elevator implements Runnable {
 	public Set<Integer> getFloorToVisit() {
 		return floorsToVisit;
 	}
+
+	public static void main(String[] args) {
+		Elevator elevator = new Elevator(1, Config.NUMBER_OF_FLOORS);
+		Thread elevatorSystem = new Thread(elevator);
+		elevatorSystem.start();
+	}
 }

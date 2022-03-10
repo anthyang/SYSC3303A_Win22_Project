@@ -10,6 +10,9 @@ public class Scheduler {
 	private Map<Elevator, List<Request>> elevQueueMap;
 	private boolean doneReceiving;
 
+	public static int ELEVATOR_UPDATE_PORT = 5000;
+	public static int NEW_REQUEST_PORT = 5001;
+
 	/**
 	 * Scheduler constructor
 	 */
@@ -91,5 +94,9 @@ public class Scheduler {
 	 */
 	public void endActions() {
 		doneReceiving = true;
+	}
+
+	public static void main(String[] args) {
+		Scheduler scheduler = new Scheduler();
 	}
 }

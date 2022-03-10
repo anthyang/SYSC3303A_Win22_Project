@@ -2,12 +2,20 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.sql.Timestamp;
+import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
 
 /**
  * Simplifies some UDP send and receive operations
  */
 public abstract class Host {
     private static int MAX_BUFFER_SIZE = 100;
+    private String hostName;
+
+    public Host(String hostName) {
+        this.hostName = hostName;
+    }
 
     /**
      * Send a given payload to the specified address and port
@@ -55,5 +63,21 @@ public abstract class Host {
     public DatagramPacket rpcCall(DatagramSocket socket, byte[] data, InetAddress addr, int port) {
         this.send(socket, data, addr, port);
         return this.receive(socket);
+    }
+
+    /**
+     * Log a message to console with a given timestamp
+     * @param str the message to print
+     */
+    public void log(String str) {
+        System.out.println(getTimestamp() + " " + this.hostName + ": " + str);
+    }
+
+    /**
+     * Get a string representation of the current time
+     * @return a timestamp
+     */
+    private String getTimestamp() {
+        return Timestamp.from(ZonedDateTime.now().toInstant().truncatedTo(ChronoUnit.SECONDS)).toString();
     }
 }
