@@ -68,7 +68,7 @@ public class Elevator extends Host implements Runnable {
 		}
     }
 
-	private Direction serveNewRequest() {
+	public Direction serveNewRequest() {
 		byte[] id = { (byte)this.elevDoorNum };
 		// Response should be an array of one byte with -1, 0, or 1
 		DatagramPacket response = this.rpcCall(
@@ -187,5 +187,14 @@ public class Elevator extends Host implements Runnable {
 			Thread elevatorSystem = new Thread(elevator);
 			elevatorSystem.start();
 		}
+	}
+
+	public Direction getDirection() {
+		return direction;
+		
+	}
+	
+	public int getCurrentFloor() {
+		return currentFloor;
 	}
 }

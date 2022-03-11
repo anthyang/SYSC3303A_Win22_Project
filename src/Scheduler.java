@@ -170,7 +170,7 @@ public class Scheduler extends Host implements Runnable{
 	/**
 	 * assign request to an elevator
 	 */
-	private void dispatchRequest() {
+	public void dispatchRequest() {
 		DatagramPacket elevReq;
 		Request req;
 		try {
@@ -260,4 +260,13 @@ public class Scheduler extends Host implements Runnable{
 		reqSch.start();
 		floorSch.start();
 	}
+	
+	public Queue<Request> getMasterQueue(){
+		return masterQueue;
+	}
+	
+	public Map<Integer, List<Request>> getElevQueueMap(){
+		return elevQueueMap;
+	}
+
 }
