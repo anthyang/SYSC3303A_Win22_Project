@@ -1,24 +1,31 @@
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.*;
+import java.net.*;
 
 /**
  * This class models a floor controller in the elevator system
  */
-public class Floor implements Runnable {
+public class Floor extends Host implements Runnable {
     /** The input file for the program's requests */
     public String inputFile;
     private boolean finished_reading = false;
+    private Host host;
 
-    private Scheduler scheduler;
+    private static Scheduler scheduler;
+    DatagramPacket sendPack;
+    DatagramSocket sendSock;
 
     /**
      * Create a new floor subsystem controller
      * @param scheduler The scheduler that will handle requests
      */
     public Floor(Scheduler scheduler, String inputName) {
-        this.scheduler = scheduler;
+        super("Floor_host");
+       // this.scheduler = scheduler;
         this.inputFile = inputName;
+
     }
 
     /**
@@ -27,9 +34,11 @@ public class Floor implements Runnable {
      * @param destFloor Passenger's destination floor
      * @param direction Direction pressed on the floor controller
      */
-    public void requestElevator(int sourceFloor, int destFloor, Direction direction) {
+    public void requestElevator(int sourceFloor, int destFloor, Direction direction) throws SocketException {
     	Request r = new Request(sourceFloor, destFloor, direction);
-        this.scheduler.addExternalRequest(r);
+        byte s_request[] = r.serialize();
+        sendSock = new DatagramSocket();
+        super.send(sendSock, s_request, InetAddress.getLoopbackAddress(), 5001);
     }
 
     @Override
