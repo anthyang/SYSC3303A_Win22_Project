@@ -36,9 +36,9 @@ public class Floor extends Host implements Runnable {
      */
     public void requestElevator(int sourceFloor, int destFloor, Direction direction) throws SocketException {
     	Request r = new Request(sourceFloor, destFloor, direction);
-        byte s_request[] = r.serialize();
-        sendSock = new DatagramSocket();
-        super.send(sendSock, s_request, InetAddress.getLoopbackAddress(), 5001);
+        byte s_request[] = r.serialize();   //Turn the request object into a byte array
+        sendSock = new DatagramSocket();    //Initialize the sending socket
+        super.send(sendSock, s_request, InetAddress.getLoopbackAddress(), 5001);    //send the request
     }
 
     @Override
