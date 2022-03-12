@@ -22,7 +22,7 @@ public class Floor extends Host implements Runnable {
      * @param scheduler The scheduler that will handle requests
      */
     public Floor(Scheduler scheduler, String inputName) {
-        super("Floor_host");
+        super("Floor");
        // this.scheduler = scheduler;
         this.inputFile = inputName;
 
@@ -39,6 +39,7 @@ public class Floor extends Host implements Runnable {
         byte s_request[] = r.serialize();   //Turn the request object into a byte array
         sendSock = new DatagramSocket();    //Initialize the sending socket
         super.send(sendSock, s_request, InetAddress.getLoopbackAddress(), 5001);    //send the request
+        super.log("send request to scheduler.");
     }
 
     @Override
