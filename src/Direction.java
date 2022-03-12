@@ -28,4 +28,8 @@ public enum Direction {
 
         throw new IllegalArgumentException("Specified enum was not found");
     }
+
+    public String getReadable() {
+        return this.readable;
+    }
 }

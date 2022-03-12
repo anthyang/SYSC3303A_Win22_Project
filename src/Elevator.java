@@ -77,6 +77,7 @@ public class Elevator extends Host implements Runnable {
 			throw new RuntimeException("Invalid response from Scheduler");
 		}
 
+		this.log("Received request from scheduler at " + response.getAddress() + ":" + response.getPort());
 		switch (responseData[0]) {
 			case -1:
 				return Direction.DOWN;
@@ -91,7 +92,7 @@ public class Elevator extends Host implements Runnable {
      * Simulates the movement of the elevator between each floor and updates the currentFloor variable.
      */
     public void simMovement() {
-		this.log("Moving.");
+		this.log("Moving " + direction.getReadable() + ".");
     	try {
     		Thread.sleep(Config.ELEVATOR_MOVEMENT);
     	} catch (InterruptedException e) {
@@ -191,8 +192,10 @@ public class Elevator extends Host implements Runnable {
 	}
 
 	public static void main(String[] args) {
-		Elevator elevator = new Elevator(1, Config.NUMBER_OF_FLOORS);
-		Thread elevatorSystem = new Thread(elevator);
-		elevatorSystem.start();
+		for (int i = 1; i <= Config.NUMBER_OF_ELEVATORS; i++) {
+			Elevator elevator = new Elevator(i, Config.NUMBER_OF_FLOORS);
+			Thread elevatorSystem = new Thread(elevator);
+			elevatorSystem.start();
+		}
 	}
 }
