@@ -18,7 +18,7 @@ public class Floor extends Host implements Runnable {
      * Create a new floor subsystem controller
      * @param inputName is the name of the input file
      */
-    public Floor(Scheduler sche, String inputName) throws SocketException {
+    public Floor(String inputName) throws SocketException {
         super("Floor");
         this.inputFile = inputName;
         sendSock = new DatagramSocket();    //Initialize the sending socket
@@ -30,7 +30,7 @@ public class Floor extends Host implements Runnable {
      * @param destFloor Passenger's destination floor
      * @param direction Direction pressed on the floor controller
      */
-    public void requestElevator(int sourceFloor, int destFloor, Direction direction) throws SocketException {
+    public void requestElevator(int sourceFloor, int destFloor, Direction direction){
     	Request r = new Request(sourceFloor, destFloor, direction);
         byte s_request[] = r.serialize();   //Turn the request object into a byte array
         super.send(sendSock, s_request, InetAddress.getLoopbackAddress(), sche.NEW_REQUEST_PORT);    //send the request
@@ -73,7 +73,7 @@ public class Floor extends Host implements Runnable {
     public boolean doneReading() {return finished_reading;}
 
     public static void main(String[] args) throws SocketException {
-        Floor floor = new Floor(sche,"src/input");
+        Floor floor = new Floor("src/input");
         Thread floorSystem = new Thread(floor);
         floorSystem.start();
     }
