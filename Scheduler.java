@@ -10,7 +10,7 @@ public class Scheduler extends Host implements Runnable{
 	private Queue<Request> masterQueue;
 	private Map<Elevator, List<Request>> elevQueueMap;
 	private boolean doneReceiving;
-	private SchedulerReport report;
+	private ElevatorReport report;
 	private Elevator e;
 	private int elevNum = Config.NUMBER_OF_ELEVATORS;
 
@@ -28,7 +28,7 @@ public class Scheduler extends Host implements Runnable{
 		masterQueue = new LinkedList<>();
 		elevQueueMap = new HashMap<>(elevNum);
 		doneReceiving = false;
-		report = new SchedulerReport(1);
+		
 	    try {
         	elevatorSocket = new DatagramSocket();
         	floorSocket = new DatagramSocket(NEW_REQUEST_PORT);
@@ -120,18 +120,18 @@ public class Scheduler extends Host implements Runnable{
 	/*
 	 * Accept new request from floor system.
 	 */
-	public synchronized Request getRequest() {
+	public synchronized ElevatorReport getRequest() {
 		DatagramPacket response = this.receive(this.floorSocket);
 		
 		byte[] data = response.getData();
-		Request r = report.deserialize(data);  // convert byte to request	
+		ElevatorReport r = report.deserialize(data);  // convert byte to request	
 		return r;
 	}
 	/*
 	 * route the request to the elevator subsystem.
 	 * 
 	 */
-	private void handleRequests(Request req) {
+	private void handleRequests(ElevatorReport req) {
 		// assign request to an elevator:
 		Direction dir = req.getDirection();
 		byte[] r = new byte[0]; 
@@ -145,10 +145,11 @@ public class Scheduler extends Host implements Runnable{
 		}	
 		
 		DatagramPacket response = this.rpcCall(this.elevatorSocket,r, InetAddress.getLoopbackAddress(), this.ELEVATOR_UPDATE_PORT );
-		ElevatorReport resp = report.deserializeData(response.getData());
+		ElevatorReport resp = report.deserialize(response.getData());
 		int currentFloor = resp.getArrivingAt();
 		int e = resp.getElevatorId();	
-		List<Request> elevList = updateQueue(report.getElevator(), currentFloor);
+		
+		List<Request> elevList = updateQueue(new Elevator(report.getElevatorId()), currentFloor);
 		byte[] sendResp = {1};
 		if (elevList.isEmpty()) {
 			sendResp[0] = 0;			
