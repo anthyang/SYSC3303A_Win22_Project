@@ -8,10 +8,9 @@ import java.net.*;
  */
 public class Floor extends Host implements Runnable {
     /** The input file for the program's requests */
-    public String inputFile;
+    private String inputFile;
     private boolean finished_reading = false;
-    DatagramSocket sendSock;
-    private static Scheduler sche;
+    private DatagramSocket sendSock;
 
 
     /**
@@ -33,7 +32,7 @@ public class Floor extends Host implements Runnable {
     public void requestElevator(int sourceFloor, int destFloor, Direction direction){
     	Request r = new Request(sourceFloor, destFloor, direction);
         byte s_request[] = r.serialize();   //Turn the request object into a byte array
-        super.send(sendSock, s_request, InetAddress.getLoopbackAddress(), sche.NEW_REQUEST_PORT);    //send the request
+        super.send(sendSock, s_request, InetAddress.getLoopbackAddress(), Scheduler.NEW_REQUEST_PORT);    //send the request
         super.log("send request to scheduler.");
     }
 
