@@ -7,7 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 class FloorTest {
     Scheduler sche = new Scheduler();
-    Floor flo = new Floor(sche, "Test/inputTest");
+    Floor flo = new Floor("Test/inputTest");
 
     /**
      * This test is to test if the floor subsystem is able to read an input file or not

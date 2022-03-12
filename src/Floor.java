@@ -1,7 +1,6 @@
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.*;
 import java.net.*;
 
 /**
@@ -11,21 +10,15 @@ public class Floor extends Host implements Runnable {
     /** The input file for the program's requests */
     public String inputFile;
     private boolean finished_reading = false;
-    private Host host;
-
-    private static Scheduler scheduler;
-    DatagramPacket sendPack;
     DatagramSocket sendSock;
 
     /**
      * Create a new floor subsystem controller
-     * @param scheduler The scheduler that will handle requests
+     * @param inputName is the name of the input file
      */
-    public Floor(Scheduler scheduler, String inputName) {
+    public Floor(String inputName) {
         super("Floor");
-       // this.scheduler = scheduler;
         this.inputFile = inputName;
-
     }
 
     /**
@@ -66,7 +59,6 @@ public class Floor extends Host implements Runnable {
                 }
             }
             finished_reading = true;
-            scheduler.endActions();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -79,7 +71,7 @@ public class Floor extends Host implements Runnable {
     public boolean doneReading() {return finished_reading;}
 
     public static void main(String[] args) {
-        Floor floor = new Floor(scheduler,"src/input");
+        Floor floor = new Floor("src/input");
         Thread floorSystem = new Thread(floor);
         floorSystem.start();
     }
