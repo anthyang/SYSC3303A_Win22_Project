@@ -1,5 +1,7 @@
 import org.junit.jupiter.api.Test;
 
+import java.net.SocketException;
+
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -7,7 +9,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 class FloorTest {
     Scheduler sche = new Scheduler();
-    Floor flo = new Floor("Test/inputTest");
+    Floor flo = new Floor(sche, "Test/inputTest");
+
+    FloorTest() throws SocketException {
+    }
 
     /**
      * This test is to test if the floor subsystem is able to read an input file or not
