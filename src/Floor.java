@@ -1,24 +1,26 @@
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.net.*;
 
 /**
  * This class models a floor controller in the elevator system
  */
-public class Floor implements Runnable {
+public class Floor extends Host implements Runnable {
     /** The input file for the program's requests */
-    public String inputFile;
+    private String inputFile;
     private boolean finished_reading = false;
+    private DatagramSocket sendSock;
 
-    private Scheduler scheduler;
 
     /**
      * Create a new floor subsystem controller
-     * @param scheduler The scheduler that will handle requests
+     * @param inputName is the name of the input file
      */
-    public Floor(Scheduler scheduler, String inputName) {
-        this.scheduler = scheduler;
+    public Floor(String inputName) throws SocketException {
+        super("Floor");
         this.inputFile = inputName;
+        sendSock = new DatagramSocket();    //Initialize the sending socket
     }
 
     /**
@@ -27,9 +29,11 @@ public class Floor implements Runnable {
      * @param destFloor Passenger's destination floor
      * @param direction Direction pressed on the floor controller
      */
-    public void requestElevator(int sourceFloor, int destFloor, Direction direction) {
+    public void requestElevator(int sourceFloor, int destFloor, Direction direction){
     	Request r = new Request(sourceFloor, destFloor, direction);
-        this.scheduler.addExternalRequest(r);
+        byte s_request[] = r.serialize();   //Turn the request object into a byte array
+        super.send(sendSock, s_request, InetAddress.getLoopbackAddress(), Scheduler.NEW_REQUEST_PORT);    //send the request
+        super.log("send request to scheduler.");
     }
 
     @Override
@@ -56,7 +60,6 @@ public class Floor implements Runnable {
                 }
             }
             finished_reading = true;
-            scheduler.endActions();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -68,8 +71,8 @@ public class Floor implements Runnable {
      */
     public boolean doneReading() {return finished_reading;}
 
-    public static void main(String[] args) {
-        Floor floor = new Floor(scheduler,"src/input");
+    public static void main(String[] args) throws SocketException {
+        Floor floor = new Floor("src/input");
         Thread floorSystem = new Thread(floor);
         floorSystem.start();
     }

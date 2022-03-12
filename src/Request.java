@@ -1,7 +1,12 @@
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
+
 /**
  * Represents a request for an elevator
  */
-public class Request {
+public class Request implements Serializable {
     private int sourceFloor;
     private int destFloor;
     private Direction direction;
@@ -40,5 +45,23 @@ public class Request {
      */
     public Direction getDirection() {
         return direction;
+    }
+
+    /**
+     * Serialize the Request object to turn it into byte array
+     * @return the serialized object
+     */
+    public byte[] serialize() {
+        ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
+
+        try {
+            ObjectOutputStream oos = new ObjectOutputStream(byteOut);
+            oos.writeObject(this);
+            oos.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return byteOut.toByteArray();
     }
 }
