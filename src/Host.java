@@ -1,4 +1,4 @@
-import java.io.IOException;
+import java.io.*;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
@@ -79,5 +79,35 @@ public abstract class Host {
      */
     private String getTimestamp() {
         return Timestamp.from(ZonedDateTime.now().toInstant().truncatedTo(ChronoUnit.SECONDS)).toString();
+    }
+
+    public static byte[] serialize(Serializable o) {
+        ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
+
+        try {
+            ObjectOutputStream oos = new ObjectOutputStream(byteOut);
+            oos.writeObject(o);
+            oos.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return byteOut.toByteArray();
+    }
+
+    public static <T> T deserialize(byte[] serializedData, Class<T> clazz) {
+        T o;
+        ByteArrayInputStream byteIn = new ByteArrayInputStream(serializedData);
+
+        try {
+            ObjectInputStream ois = new ObjectInputStream(byteIn);
+            o = clazz.cast(ois.readObject());
+            ois.close();
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+            return null;
+        }
+
+        return o;
     }
 }

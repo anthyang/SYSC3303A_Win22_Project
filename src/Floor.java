@@ -31,7 +31,7 @@ public class Floor extends Host implements Runnable {
      */
     public void requestElevator(int sourceFloor, int destFloor, Direction direction){
     	Request r = new Request(sourceFloor, destFloor, direction);
-        byte s_request[] = r.serialize();   //Turn the request object into a byte array
+        byte[] s_request = Host.serialize(r);   //Turn the request object into a byte array
         super.send(sendSock, s_request, InetAddress.getLoopbackAddress(), Scheduler.NEW_REQUEST_PORT);    //send the request
         super.log("send request to scheduler.");
     }

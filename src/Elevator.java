@@ -145,7 +145,7 @@ public class Elevator extends Host implements Runnable {
 		ElevatorReport report = new ElevatorReport(this.elevDoorNum, this.direction, this.currentFloor);
         this.log("Notifying scheduler of arrival at floor " + this.currentFloor);
 
-        byte[] msg = report.serialize();
+        byte[] msg = Host.serialize(report);
 
 		this.log("Notifying scheduler at " + InetAddress.getLoopbackAddress() + ":" + Scheduler.ELEVATOR_UPDATE_PORT);
 		this.log("Data: " + new String(msg));

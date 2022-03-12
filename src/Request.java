@@ -46,22 +46,4 @@ public class Request implements Serializable {
     public Direction getDirection() {
         return direction;
     }
-
-    /**
-     * Serialize the Request object to turn it into byte array
-     * @return the serialized object
-     */
-    public byte[] serialize() {
-        ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
-
-        try {
-            ObjectOutputStream oos = new ObjectOutputStream(byteOut);
-            oos.writeObject(this);
-            oos.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        return byteOut.toByteArray();
-    }
 }
