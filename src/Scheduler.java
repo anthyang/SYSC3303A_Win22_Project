@@ -8,7 +8,7 @@ import java.util.stream.Collectors;
 public class Scheduler extends Host implements Runnable{
 
 	private Queue<Request> masterQueue;
-	private Map<Elevator, List<Request>> elevQueueMap;
+	private Map<Integer, List<Request>> elevQueueMap;
 	private boolean doneReceiving;
 	private ElevatorReport report;
 	private Elevator e;
@@ -50,8 +50,8 @@ public class Scheduler extends Host implements Runnable{
 	 * Register an elevator with the scheduler
 	 * @param e the elevator to register
 	 */
-	public void registerElevator(Elevator e) {
-		elevQueueMap.put(e, new ArrayList<>());
+	public void registerElevator(int id) {
+		elevQueueMap.put(id, new ArrayList<>());
 	}
 
 	/**
@@ -69,8 +69,8 @@ public class Scheduler extends Host implements Runnable{
 	 * @param currentFloor the elevator's current floor
 	 * @return the elevator's queue
 	 */
-	public synchronized List<Request> updateQueue(Elevator e, int currentFloor) {
-		if (doneReceiving && masterQueue.isEmpty() && elevQueueMap.get(e).isEmpty()) {
+	public synchronized List<Request> updateQueue(int id, int currentFloor) {
+		if (doneReceiving && masterQueue.isEmpty() && elevQueueMap.get(id).isEmpty()) {
 			return null;
 		}
 
@@ -120,18 +120,18 @@ public class Scheduler extends Host implements Runnable{
 	/*
 	 * Accept new request from floor system.
 	 */
-	public synchronized ElevatorReport getRequest() {
+	public synchronized Request getRequest() {
 		DatagramPacket response = this.receive(this.floorSocket);
 		
 		byte[] data = response.getData();
-		ElevatorReport r = report.deserialize(data);  // convert byte to request	
-		return r;
+		Request req = super.deserialize(data);  // convert byte to request	
+		return req;
 	}
 	/*
 	 * route the request to the elevator subsystem.
 	 * 
 	 */
-	private void handleRequests(ElevatorReport req) {
+	private void handleRequests(Request req) {
 		// assign request to an elevator:
 		Direction dir = req.getDirection();
 		byte[] r = new byte[0]; 
@@ -149,7 +149,7 @@ public class Scheduler extends Host implements Runnable{
 		int currentFloor = resp.getArrivingAt();
 		int e = resp.getElevatorId();	
 		
-		List<Request> elevList = updateQueue(new Elevator(report.getElevatorId()), currentFloor);
+		List<Request> elevList = updateQueue(id, currentFloor);
 		byte[] sendResp = {1};
 		if (elevList.isEmpty()) {
 			sendResp[0] = 0;			
