@@ -10,8 +10,6 @@ public class Scheduler extends Host implements Runnable{
 	private Queue<Request> masterQueue;
 	private Map<Integer, List<Request>> elevQueueMap;
 	private boolean doneReceiving;
-	private ElevatorReport report;
-	private Elevator e;
 	private int elevNum = Config.NUMBER_OF_ELEVATORS;
 
 	public static int ELEVATOR_UPDATE_PORT = 5000;
@@ -69,8 +67,8 @@ public class Scheduler extends Host implements Runnable{
 	 * @param currentFloor the elevator's current floor
 	 * @return the elevator's queue
 	 */
-	public synchronized List<Request> updateQueue(int id, int currentFloor) {
-		if (doneReceiving && masterQueue.isEmpty() && elevQueueMap.get(id).isEmpty()) {
+	public synchronized List<Request> updateQueue(ElevatorReport e, int currentFloor) {
+		if (doneReceiving && masterQueue.isEmpty() && elevQueueMap.get(e.getElevatorId()).isEmpty()) {
 			return null;
 		}
 
@@ -82,7 +80,7 @@ public class Scheduler extends Host implements Runnable{
 			}
 		}
 
-		List<Request> elevatorQueue = elevQueueMap.get(e);
+		List<Request> elevatorQueue = elevQueueMap.get(e.getElevatorId());
 
 		List<Request> newRequests;
 		if (elevatorQueue.isEmpty()) {
@@ -124,7 +122,7 @@ public class Scheduler extends Host implements Runnable{
 		DatagramPacket response = this.receive(this.floorSocket);
 		
 		byte[] data = response.getData();
-		Request req = super.deserialize(data);  // convert byte to request	
+		Request req = super.deserialize(data, Request.class);  // convert byte to request	
 		return req;
 	}
 	/*
@@ -145,11 +143,11 @@ public class Scheduler extends Host implements Runnable{
 		}	
 		
 		DatagramPacket response = this.rpcCall(this.elevatorSocket,r, InetAddress.getLoopbackAddress(), this.ELEVATOR_UPDATE_PORT );
-		ElevatorReport resp = report.deserialize(response.getData());
+		ElevatorReport resp = super.deserialize(response.getData(), ElevatorReport.class);
 		int currentFloor = resp.getArrivingAt();
 		int e = resp.getElevatorId();	
 		
-		List<Request> elevList = updateQueue(id, currentFloor);
+		List<Request> elevList = updateQueue(resp, currentFloor);
 		byte[] sendResp = {1};
 		if (elevList.isEmpty()) {
 			sendResp[0] = 0;			
