@@ -5,7 +5,7 @@
 public class Config {
 	public static final int DOOR_MOVEMENT = 4590;
 	public static final int ELEVATOR_MOVEMENT = 2832;
-	public static final int NUMBER_OF_ELEVATORS = 1;
+	public static final int NUMBER_OF_ELEVATORS = 2;
 	public static final int NUMBER_OF_FLOORS = 7;
 	public static final int TIME = 0;
     public static final int SOURCE_FLOOR = 1;

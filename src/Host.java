@@ -10,7 +10,7 @@ import java.time.temporal.ChronoUnit;
  * Simplifies some UDP send and receive operations
  */
 public abstract class Host {
-    private static int MAX_BUFFER_SIZE = 100;
+    private static int MAX_BUFFER_SIZE = 250;
     private String hostName;
 
     public Host(String hostName) {
@@ -26,7 +26,6 @@ public abstract class Host {
      */
     public void send(DatagramSocket socket, byte[] data, InetAddress addr, int port) {
         DatagramPacket packet = new DatagramPacket(data, data.length, addr, port);
-
         try {
             socket.send(packet);
         } catch (IOException e) {
@@ -42,7 +41,6 @@ public abstract class Host {
     public DatagramPacket receive(DatagramSocket socket) {
         byte[] buf = new byte[Host.MAX_BUFFER_SIZE];
         DatagramPacket packet = new DatagramPacket(buf, buf.length);
-
         try {
             socket.receive(packet);
         } catch (IOException e) {
@@ -105,7 +103,7 @@ public abstract class Host {
             ois.close();
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
-            return null;
+            throw new RuntimeException("Could not deserialize object");
         }
 
         return o;

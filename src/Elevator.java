@@ -69,8 +69,14 @@ public class Elevator extends Host implements Runnable {
     }
 
 	private Direction serveNewRequest() {
+		byte[] id = { (byte)this.elevDoorNum };
 		// Response should be an array of one byte with -1, 0, or 1
-		DatagramPacket response = this.receive(this.sendSocket);
+		DatagramPacket response = this.rpcCall(
+				this.sendSocket,
+				id,
+				InetAddress.getLoopbackAddress(),
+				Scheduler.ELEVATOR_UPDATE_PORT
+		);
 
 		byte[] responseData = response.getData();
 		if (response.getLength() != 1 || responseData[0] < -1 || responseData[0] > 1) {
@@ -106,7 +112,6 @@ public class Elevator extends Host implements Runnable {
 			currentFloor--;
 			dirLamps = -1;
 		}
-		this.log("At floor " + this.currentFloor);
     }
     
     /**
@@ -115,6 +120,7 @@ public class Elevator extends Host implements Runnable {
      */
     private void openDoor() {    	
 		this.log("Opening doors at floor " + this.currentFloor);
+		this.doorsOpen = true;
     	try {
     		Thread.sleep(Config.DOOR_MOVEMENT);
     	} catch (InterruptedException e) {
@@ -130,6 +136,7 @@ public class Elevator extends Host implements Runnable {
      */
     private void closeDoor() {
     	this.log("Closing doors at floor " + this.currentFloor);
+		this.doorsOpen = false;
 		try {
     		Thread.sleep(Config.DOOR_MOVEMENT);
     	} catch (InterruptedException e) {
@@ -143,12 +150,11 @@ public class Elevator extends Host implements Runnable {
 	 */
 	public boolean notifyArrival(boolean wasMoving) {
 		ElevatorReport report = new ElevatorReport(this.elevDoorNum, this.direction, this.currentFloor);
-        this.log("Notifying scheduler of arrival at floor " + this.currentFloor);
+        this.log("Notifying scheduler of arrival at floor " + this.currentFloor + " at "
+				+ InetAddress.getLoopbackAddress() + ":" + Scheduler.ELEVATOR_UPDATE_PORT);
 
         byte[] msg = Host.serialize(report);
 
-		this.log("Notifying scheduler at " + InetAddress.getLoopbackAddress() + ":" + Scheduler.ELEVATOR_UPDATE_PORT);
-		this.log("Data: " + new String(msg));
 		DatagramPacket response = this.rpcCall(
 				this.sendSocket,
 				msg,
@@ -167,28 +173,12 @@ public class Elevator extends Host implements Runnable {
 				this.log("Stopping at floor " + this.currentFloor);
 				return true;
 			} else {
-				this.log("Nothing to service, continuing.");
+				this.log("Nothing to service at floor " + this.currentFloor + ", continuing.");
 				return false;
 			}
 		}
 
 		return true;
-	}
-
-	/**
-	 * Get the elevator's direction
-	 * @return the current direction
-	 */
-	public Direction getDirection() {
-		return direction;
-	}
-
-	/**
-	 * Get the elevator's current floor
-	 * @return the current floor
-	 */
-	public int getCurrentFloor() {
-		return currentFloor;
 	}
 
 	public static void main(String[] args) {
