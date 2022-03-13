@@ -51,38 +51,6 @@ public class IntegrationTest {
 		assertEquals(r.getDirection(), Direction.UP);
 	}
 	
-	//Scheduler Functionality
-	
-	/**
-	 * Asserts that, after a floor is serviced, it is removed from the respective elevator's queue
-	 */
-	@Test
-	public void testServiceComplete() {
-		Request r = new Request(1, 3, Direction.UP);
-		s.getElevQueueMap().get(e1).add(r);
-		s.dispatchRequest();;
-		Direction d = e1.getDirection();
-		d = e1.serveNewRequest();
-		while(!e1.notifyArrival(true)) {
-			e1.simMovement();
-		}
-		e1.notifyArrival(false);
-		assertNull(s.getElevQueueMap().get(e1).get(0));//getting the first element from the list of requests from the specified elevator from the specified scheduler
-	}
-	
-	//Scheduler to Elevator Communication
-	
-	/**
-	 * Asserts that the elevator receives service requests
-	 */
-	@Test
-	public void testServeNewRequest() {
-		Request r = new Request(1, 3, Direction.UP);
-		s.getElevQueueMap().get(e1).add(r);
-		s.dispatchRequest();;
-		Direction d = e1.getDirection();
-		d = e1.serveNewRequest();
-		assertEquals(d, Direction.UP);
-	}
+
 
 }

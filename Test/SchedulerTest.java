@@ -28,7 +28,7 @@ class SchedulerTest {
     @Test
     public void testRegisterElevator() {
     	s.registerElevator(1);
-    	assertTrue(s.getElevQueueMap().containsKey(e));
+    	assertTrue(s.getElevQueueMap().containsKey(1));
     }
     
 }

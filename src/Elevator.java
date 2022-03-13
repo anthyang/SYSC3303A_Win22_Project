@@ -191,7 +191,10 @@ public class Elevator extends Host implements Runnable {
 
 	public Direction getDirection() {
 		return direction;
-		
+	}
+	
+	public void setElevatorDirection(Direction d) {
+		this.direction = d;
 	}
 	
 	public int getCurrentFloor() {

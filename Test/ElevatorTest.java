@@ -31,13 +31,12 @@ class ElevatorTest {
      */
     @Test
     public void testSimMov() {
-    	Direction d = e.getDirection();
-    	 d = Direction.UP;
+    	e.setElevatorDirection(Direction.UP);
         e.simMovement();
         assertEquals(2, e.getCurrentFloor());
         e.simMovement();
         assertEquals(3, e.getCurrentFloor());
-        d = Direction.DOWN;
+    	e.setElevatorDirection(Direction.DOWN);
         e.simMovement();
         assertEquals(2, e.getCurrentFloor());
     }
@@ -47,10 +46,9 @@ class ElevatorTest {
      */
     @Test
     public void testServeNewRequest() {
-    	Direction d = e.getDirection();
-    	d = Direction.UP;
-    	s.getElevQueueMap().get(e).add(new Request(1, 3, Direction.UP));
-    	e.serveNewRequest();
+    	e.setElevatorDirection(Direction.UP);
+    	s.registerElevator(1);
+    	s.getElevQueueMap().get(1).add(new Request(1, 3, Direction.UP));
     	for(int i = 0; i < 2; i++) {
     		e.simMovement();
     	}

@@ -9,11 +9,13 @@ import org.junit.jupiter.api.*;
  */
 class FloorTest {
     private static Floor f;
+    private static Scheduler s;
     
     @BeforeAll
     public static void init() {
     	try {
 			f = new Floor("test/inputTest");
+			s = new Scheduler(false);
 		} catch (SocketException e) {
 			e.printStackTrace();
 		}
@@ -36,7 +38,7 @@ class FloorTest {
     @Test
     public void testRequestElevator() {
     	f.requestElevator(0, 4, Direction.UP);
-    	Scheduler s = new Scheduler(False);
+    	s.getRequest();
     	Request r = s.getMasterQueue().poll();
     	assertEquals(r.getSourceFloor(), 0);
     	assertEquals(r.getDestFloor(), 4);
@@ -50,15 +52,17 @@ class FloorTest {
     public void testReadInputFile() {
     	f.run();
     	if(f.doneReading()) {
-    		Scheduler s = new Scheduler(False);
+    		s.getRequest();
         	Request r = s.getMasterQueue().poll();
         	assertEquals(r.getSourceFloor(), 2);
         	assertEquals(r.getDestFloor(), 4);
         	assertEquals(r.getDirection(), Direction.UP);
+    		s.getRequest();
         	r = s.getMasterQueue().poll();
         	assertEquals(r.getSourceFloor(), 1);
         	assertEquals(r.getDestFloor(), 4);
         	assertEquals(r.getDirection(), Direction.UP);
+    		s.getRequest();
         	r = s.getMasterQueue().poll();
         	assertEquals(r.getSourceFloor(), 4);
         	assertEquals(r.getDestFloor(), 1);
