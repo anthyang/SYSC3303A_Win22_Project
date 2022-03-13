@@ -55,12 +55,12 @@ class FloorTest {
     		s.getRequest();
         	Request r = s.getMasterQueue().poll();
         	assertEquals(r.getSourceFloor(), 2);
-        	assertEquals(r.getDestFloor(), 4);
+        	assertEquals(r.getDestFloor(), 5);
         	assertEquals(r.getDirection(), Direction.UP);
     		s.getRequest();
         	r = s.getMasterQueue().poll();
         	assertEquals(r.getSourceFloor(), 1);
-        	assertEquals(r.getDestFloor(), 4);
+        	assertEquals(r.getDestFloor(), 7);
         	assertEquals(r.getDirection(), Direction.UP);
     		s.getRequest();
         	r = s.getMasterQueue().poll();
