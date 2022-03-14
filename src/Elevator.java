@@ -15,6 +15,7 @@ public class Elevator extends Host implements Runnable {
     private int currentFloor;
 	private Direction direction;
 	private boolean doorsOpen;
+	private int sendPort;
         
     // add direction lamps to donate arrival and direction of an elevator at a floor
     private int dirLamps;
@@ -34,6 +35,7 @@ public class Elevator extends Host implements Runnable {
     	this.floorLamps = new boolean[floorCount];
     	this.dirLamps = 0; // -1 for down, 0 - not moving, 1 for up:
 		this.doorsOpen = true;
+		this.sendPort = Scheduler.ELEVATOR_UPDATE_PORT;
     	
         try {
         	sendSocket = new DatagramSocket();
@@ -42,6 +44,28 @@ public class Elevator extends Host implements Runnable {
          }
 
     }
+
+	/**
+	 * Additional Elevator constructor to override the default send port.
+	 * @param id represents an Integer of the elevator's identification number.
+	 * @param floorCount represents an Integer of the maximum amount of floors in the building.
+	 */
+	public Elevator(int id, int floorCount, int sendPort) {
+		super("Elevator " + id);
+		this.elevDoorNum = id;
+		this.currentFloor = 1;
+		this.floorLamps = new boolean[floorCount];
+		this.dirLamps = 0; // -1 for down, 0 - not moving, 1 for up:
+		this.doorsOpen = true;
+		this.sendPort = sendPort;
+
+		try {
+			sendSocket = new DatagramSocket();
+		} catch (SocketException se) {
+			se.printStackTrace();
+		}
+
+	}
 
     /**
      * Picks up and drops off passengers endlessly
@@ -75,7 +99,7 @@ public class Elevator extends Host implements Runnable {
 				this.sendSocket,
 				id,
 				InetAddress.getLoopbackAddress(),
-				Scheduler.ELEVATOR_UPDATE_PORT
+				this.sendPort
 		);
 
 		byte[] responseData = response.getData();
@@ -151,7 +175,7 @@ public class Elevator extends Host implements Runnable {
 	public boolean notifyArrival(boolean wasMoving) {
 		ElevatorReport report = new ElevatorReport(this.elevDoorNum, this.direction, this.currentFloor);
         this.log("Notifying scheduler of arrival at floor " + this.currentFloor + " at "
-				+ InetAddress.getLoopbackAddress() + ":" + Scheduler.ELEVATOR_UPDATE_PORT);
+				+ InetAddress.getLoopbackAddress() + ":" + this.sendPort);
 
         byte[] msg = Host.serialize(report);
 
@@ -159,7 +183,7 @@ public class Elevator extends Host implements Runnable {
 				this.sendSocket,
 				msg,
 				InetAddress.getLoopbackAddress(),
-				Scheduler.ELEVATOR_UPDATE_PORT
+				this.sendPort
 		);
 
 		byte[] responseData = response.getData();

@@ -22,7 +22,7 @@ class ElevatorTest {
     @BeforeEach
     public void init() {
         s = new Scheduler(true);
-    	e = new Elevator(0, 10);
+    	e = new Elevator(0, 10, s.getPort());
 
     }
 

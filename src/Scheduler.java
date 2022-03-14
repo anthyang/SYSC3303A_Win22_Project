@@ -69,11 +69,7 @@ public class Scheduler extends Host implements Runnable{
 		this.serveNewRequests = false;
 
 		try {
-			if (serveElevators) {
-				socket = new DatagramSocket(ELEVATOR_UPDATE_PORT);
-			} else {
-				socket = new DatagramSocket(NEW_REQUEST_PORT);
-			}
+			socket = new DatagramSocket(0);
 		} catch (SocketException se) {
 			se.printStackTrace();
 		}
@@ -269,4 +265,7 @@ public class Scheduler extends Host implements Runnable{
 		return elevQueueMap;
 	}
 
+	public int getPort() {
+		return this.socket.getLocalPort();
+	}
 }

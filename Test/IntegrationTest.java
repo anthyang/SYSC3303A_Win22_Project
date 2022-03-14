@@ -15,21 +15,21 @@ public class IntegrationTest {
 	private static Elevator e1;
 	private static Elevator e2;
 	private static Elevator e3;
-	
+
 	/**
 	 * Initialization of integration testing environment;
 	 */
 	@BeforeAll
 	public static void init() {
-		s = new Scheduler(true);
-		e1 = new Elevator(1, 7);
+		s = new Scheduler(false);
+		e1 = new Elevator(1, 7, s.getPort());
 		s.registerElevator(1);
-		e2 = new Elevator(2, 7);
+		e2 = new Elevator(2, 7, s.getPort());
 		s.registerElevator(2);
-		e3 = new Elevator(3, 7);
+		e3 = new Elevator(3, 7, s.getPort());
 		s.registerElevator(3);
 		try {
-			f = new Floor("test");
+			f = new Floor("test", s.getPort());
 		} catch (SocketException e) {
 			e.printStackTrace();
 		}
@@ -42,7 +42,6 @@ public class IntegrationTest {
 	 */
 	@Test
 	public void testAddFloorRequestToScheduler() {
-		s = new Scheduler(false);
 		f.requestElevator(3, 4, Direction.UP);
 		s.getRequest();
 		Request r = s.getMasterQueue().peek();

@@ -14,8 +14,8 @@ class FloorTest {
     @BeforeAll
     public static void init() {
     	try {
-			f = new Floor("test/inputTest");
 			s = new Scheduler(false);
+			f = new Floor("test/inputTest", s.getPort());
 		} catch (SocketException e) {
 			e.printStackTrace();
 		}

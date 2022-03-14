@@ -18,7 +18,7 @@ class SchedulerTest {
     @BeforeAll
     public static void init() {
         s = new Scheduler(true);
-        e = new Elevator(1, Config.NUMBER_OF_FLOORS);
+        e = new Elevator(1, Config.NUMBER_OF_FLOORS, s.getPort());
         
     }
 
