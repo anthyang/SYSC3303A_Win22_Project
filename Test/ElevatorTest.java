@@ -1,13 +1,10 @@
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
-import java.net.SocketException;
-import java.util.Set;
+import java.net.*;
+import java.util.*;
+import java.util.concurrent.*;
 
 //TODO make tests to floorLamps, currentFloor, direction, doorsOpen, serveNewRequest(), simMovement(), openDoor(), closeDoor(), addExternalRequest(), registerElevator()
 
@@ -21,9 +18,12 @@ class ElevatorTest {
 
     @BeforeEach
     public void init() {
-        s = new Scheduler(true);
+    	BlockingDeque<Request> master = new LinkedBlockingDeque<>();
+		BlockingDeque<DatagramPacket> reqsToServe = new LinkedBlockingDeque<>();
+		Map<Integer, List<Request>> queueMap = Collections.synchronizedMap(new HashMap<>(Config.NUMBER_OF_ELEVATORS));
+		Map<Integer, Integer> floorMap = Collections.synchronizedMap(new HashMap<>(Config.NUMBER_OF_ELEVATORS));
+        s = new Scheduler(master, reqsToServe, queueMap, floorMap, true, false);
     	e = new Elevator(0, 10, s.getPort());
-
     }
 
     /**
@@ -55,4 +55,11 @@ class ElevatorTest {
     	assertEquals(3, e.getCurrentFloor());
     }
     
+    /**
+     * Closes all the sockets so that the other Test classes can bind properly.
+     */
+    @AfterEach
+    public void closeSockets() {
+    	s.closeAllSockets();
+    }
 }

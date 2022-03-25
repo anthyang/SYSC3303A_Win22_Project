@@ -1,11 +1,10 @@
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 
 import static org.junit.Assert.assertTrue;
 
-import java.util.List;
-import java.util.Queue;
+import java.net.*;
+import java.util.*;
+import java.util.concurrent.*;
 
 
 /**
@@ -15,9 +14,13 @@ class SchedulerTest {
     private static Elevator e;
     private static Scheduler s;
 
-    @BeforeAll
-    public static void init() {
-        s = new Scheduler(true);
+    @BeforeEach
+    public void init() {
+    	BlockingDeque<Request> master = new LinkedBlockingDeque<>();
+		BlockingDeque<DatagramPacket> reqsToServe = new LinkedBlockingDeque<>();
+		Map<Integer, List<Request>> queueMap = Collections.synchronizedMap(new HashMap<>(Config.NUMBER_OF_ELEVATORS));
+		Map<Integer, Integer> floorMap = Collections.synchronizedMap(new HashMap<>(Config.NUMBER_OF_ELEVATORS));
+        s = new Scheduler(master, reqsToServe, queueMap, floorMap, true, false);
         e = new Elevator(1, Config.NUMBER_OF_FLOORS, s.getPort());
         
     }
@@ -29,6 +32,14 @@ class SchedulerTest {
     public void testRegisterElevator() {
     	s.registerElevator(1);
     	assertTrue(s.getElevQueueMap().containsKey(1));
+    }
+    
+    /**
+     * Closes all the sockets so that the other Test classes can bind properly.
+     */
+    @AfterEach
+    public void closeSockets() {
+    	s.closeAllSockets();
     }
     
 }

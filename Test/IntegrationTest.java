@@ -1,8 +1,9 @@
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.net.SocketException;
+import java.net.*;
+import java.util.*;
+import java.util.concurrent.*;
 
-import org.junit.*;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.Test;
 
@@ -19,9 +20,13 @@ public class IntegrationTest {
 	/**
 	 * Initialization of integration testing environment;
 	 */
-	@BeforeAll
-	public static void init() {
-		s = new Scheduler(false);
+	@BeforeEach
+	public void init() {
+		BlockingDeque<Request> master = new LinkedBlockingDeque<>();
+		BlockingDeque<DatagramPacket> reqsToServe = new LinkedBlockingDeque<>();
+		Map<Integer, List<Request>> queueMap = Collections.synchronizedMap(new HashMap<>(Config.NUMBER_OF_ELEVATORS));
+		Map<Integer, Integer> floorMap = Collections.synchronizedMap(new HashMap<>(Config.NUMBER_OF_ELEVATORS));
+        s = new Scheduler(master, reqsToServe, queueMap, floorMap, false, false);
 		e1 = new Elevator(1, 7, s.getPort());
 		s.registerElevator(1);
 		e2 = new Elevator(2, 7, s.getPort());
@@ -50,6 +55,11 @@ public class IntegrationTest {
 		assertEquals(r.getDirection(), Direction.UP);
 	}
 	
-
-
+	/**
+     * Closes all the sockets so that the other Test classes can bind properly.
+     */
+    @AfterEach
+    public void closeSockets() {
+    	s.closeAllSockets();
+    }
 }
