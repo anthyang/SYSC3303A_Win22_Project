@@ -63,7 +63,7 @@ public class Elevator extends Host implements Runnable {
 		this.dirLamps = 0; // -1 for down, 0 - not moving, 1 for up:
 		this.doorsOpen = true;
 		this.sendPort = sendPort;
-
+		timer = new Timer("Timer "+id);//Making a new timer for each elevator
 		try {
 			sendSocket = new DatagramSocket();
 		} catch (SocketException se) {
@@ -163,7 +163,6 @@ public class Elevator extends Host implements Runnable {
 					closeDoor();
 			}
 		};
-		timer = new Timer("Timer "+this.elevDoorNum);//Making a new timer for each elevator
 		timer.schedule(timerTask, 10000);
     	try {
     		Thread.sleep(Config.DOOR_MOVEMENT);
@@ -181,7 +180,7 @@ public class Elevator extends Host implements Runnable {
     private void closeDoor() {
     	this.log("Closing doors at floor " + this.currentFloor);
 		this.doorsOpen = false;
-		timer.cancel();
+		timerTask.cancel();
 		try {
     		Thread.sleep(Config.DOOR_MOVEMENT);
     	} catch (InterruptedException e) {
