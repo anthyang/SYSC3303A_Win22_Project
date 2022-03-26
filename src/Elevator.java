@@ -19,8 +19,8 @@ public class Elevator extends Host implements Runnable {
 	private boolean doorsOpen;
 	private int sendPort;
 	private static int counter = 0;
-	private static Timer timer;
-	private static TimerTask timerTask;
+	private Timer timer;
+	private TimerTask timerTask;
         
     // add direction lamps to donate arrival and direction of an elevator at a floor
     private int dirLamps;
@@ -79,11 +79,9 @@ public class Elevator extends Host implements Runnable {
 		while (true) {
 			if (!this.doorsOpen) {
 				//Start the timer with a with the delay of 20ms and perform the timer task every 1 second
-				timer.scheduleAtFixedRate(timerTask, 20, 1000);
 				// Ensure passengers can load/unload
 				this.openDoor();
 			}
-
 			// Ask scheduler for next direction of travel
 			this.direction = this.serveNewRequest();
 			if (this.direction == Direction.NOT_MOVING) {
@@ -152,6 +150,21 @@ public class Elevator extends Host implements Runnable {
     private void openDoor() {    	
 		this.log("Opening doors at floor " + this.currentFloor);
 		this.doorsOpen = true;
+		timerTask = new TimerTask() {
+			/**
+			 * Timertask increase the counter by 1 every 1000ms, and this is controlled by the timer
+			 */
+			@Override
+			public void run() {
+					/* When counter reach 10, which means the door of the elevator has been open for 10 seconds
+					without closing, timer task will force elevator to close the door, cancel the timer while also
+					reset the counter to 0
+					 */
+					closeDoor();
+			}
+		};
+		timer = new Timer("Timer "+this.elevDoorNum);//Making a new timer for each elevator
+		timer.schedule(timerTask, 10000);
     	try {
     		Thread.sleep(Config.DOOR_MOVEMENT);
     	} catch (InterruptedException e) {
@@ -168,6 +181,7 @@ public class Elevator extends Host implements Runnable {
     private void closeDoor() {
     	this.log("Closing doors at floor " + this.currentFloor);
 		this.doorsOpen = false;
+		timer.cancel();
 		try {
     		Thread.sleep(Config.DOOR_MOVEMENT);
     	} catch (InterruptedException e) {
@@ -216,26 +230,6 @@ public class Elevator extends Host implements Runnable {
 		for (int i = 1; i <= Config.NUMBER_OF_ELEVATORS; i++) {
 			Elevator elevator = new Elevator(i, Config.NUMBER_OF_FLOORS);
 			Thread elevatorSystem = new Thread(elevator);
-			timerTask = new TimerTask() {
-				/**
-				 * Timertask increase the counter by 1 every 1000ms, and this is controlled by the timer
-				 */
-				@Override
-				public void run() {
-					if(counter < 10) {
-						counter++;
-					}else{
-						/* When counter reach 10, which means the door of the elevator has been open for 10 seconds
-						without closing, timer task will force elevator to close the door, cancel the timer while also
-						reset the counter to 0
-						 */
-						elevator.closeDoor();
-						timer.cancel();
-						counter = 0;
-					}
-				}
-			};
-			timer = new Timer("Timer "+i);//Making a new timer for each elevator
 			elevatorSystem.start();
 		}
 	}
