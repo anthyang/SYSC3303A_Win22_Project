@@ -1,5 +1,6 @@
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.net.InetAddress;
 import java.net.SocketException;
 
 import org.junit.*;
@@ -23,11 +24,11 @@ public class IntegrationTest {
 	public static void init() {
 		s = new Scheduler(false);
 		e1 = new Elevator(1, 7, s.getPort());
-		s.registerElevator(1);
+		s.registerElevator(1, InetAddress.getLoopbackAddress(), 9999);
 		e2 = new Elevator(2, 7, s.getPort());
-		s.registerElevator(2);
+		s.registerElevator(2, InetAddress.getLoopbackAddress(), 9999);
 		e3 = new Elevator(3, 7, s.getPort());
-		s.registerElevator(3);
+		s.registerElevator(3, InetAddress.getLoopbackAddress(), 9999);
 		try {
 			f = new Floor("test", s.getPort());
 		} catch (SocketException e) {
@@ -42,7 +43,7 @@ public class IntegrationTest {
 	 */
 	@Test
 	public void testAddFloorRequestToScheduler() {
-		f.requestElevator(3, 4, Direction.UP);
+		f.requestElevator(3, 4, Direction.UP, false);
 		s.getRequest();
 		Request r = s.getMasterQueue().peek();
 		assertEquals(r.getSourceFloor(), 3);

@@ -9,50 +9,31 @@ import java.util.concurrent.LinkedBlockingDeque;
 public class Scheduler extends Host implements Runnable{
 
 	private BlockingDeque<Request> masterQueue;
-	private BlockingDeque<DatagramPacket> elevatorsNeedingService;
-	private Map<Integer, List<Request>> elevQueueMap;
-	private Map<Integer, Integer> elevFloorMap;
+	private BlockingDeque<Integer> elevatorsNeedingService;
+	private Map<Integer, ElevatorStatus> elevators;
+	private static Timer timer = new Timer();
 	private boolean serveElevators;
 	private boolean serveNewRequests;
 
 	public static int ELEVATOR_UPDATE_PORT = 5000;
 	public static int NEW_REQUEST_PORT = 5001;
 
-	// add datagram
-	private DatagramSocket socket;
-
 	/**
 	 * Scheduler constructor
 	 */
 	public Scheduler(
 			BlockingDeque<Request> syncList,
-			BlockingDeque<DatagramPacket> needingService,
-			Map<Integer, List<Request>> queueMap,
-			Map<Integer, Integer> floorMap,
+			BlockingDeque<Integer> needingService,
+			Map<Integer, ElevatorStatus> elevators,
 			boolean serveElevators,
 			boolean serveNewRequests
 	) {
-		super("Scheduler");
+		super("Scheduler", serveElevators ? (serveNewRequests ? 0 : ELEVATOR_UPDATE_PORT) : NEW_REQUEST_PORT);
 		this.masterQueue = syncList;
-		elevQueueMap = queueMap;
-		elevFloorMap = floorMap;
 		this.elevatorsNeedingService = needingService;
+		this.elevators = elevators;
 		this.serveElevators = serveElevators;
 		this.serveNewRequests = serveNewRequests;
-		
-	    try {
-			if (serveElevators) {
-				if (serveNewRequests) {
-					socket = new DatagramSocket();
-				} else {
-					socket = new DatagramSocket(ELEVATOR_UPDATE_PORT);
-				}
-			} else {
-				socket = new DatagramSocket(NEW_REQUEST_PORT);
-			}
-         } catch (SocketException se) {
-            se.printStackTrace();
-         }
 	}
 
 	/**
@@ -62,26 +43,18 @@ public class Scheduler extends Host implements Runnable{
 	public Scheduler(boolean serveElevators) {
 		super("Scheduler");
 		this.masterQueue = new LinkedBlockingDeque<>();
-		elevQueueMap = new HashMap<>(Config.NUMBER_OF_ELEVATORS);
-		elevFloorMap = new HashMap<>(Config.NUMBER_OF_ELEVATORS);
 		this.elevatorsNeedingService = new LinkedBlockingDeque<>();
 		this.serveElevators = serveElevators;
 		this.serveNewRequests = false;
-
-		try {
-			socket = new DatagramSocket(0);
-		} catch (SocketException se) {
-			se.printStackTrace();
-		}
 	}
 
 	/**
 	 * Register an elevator with the scheduler
 	 * @param id the elevator to register
 	 */
-	public void registerElevator(int id) {
-		elevQueueMap.put(id, new ArrayList<>());
-		elevFloorMap.put(id, 1); // Assume all elevators start at first floor
+	public void registerElevator(int id, InetAddress address, int port) {
+		// Assume all elevators start at first floor
+		this.elevators.put(id, new ElevatorStatus(1, Direction.NOT_MOVING, address, port));
 		this.log("Registering elevator " + id);
 	}
 
@@ -92,33 +65,27 @@ public class Scheduler extends Host implements Runnable{
 	 */
 	public boolean updateQueue(ElevatorReport e) {
 		int elevId = e.getElevatorId();
-		List<Request> elevQueue = elevQueueMap.get(elevId);
-		boolean elevatorShouldStop = false;
+		ElevatorStatus elevator = elevators.get(elevId);
+		elevator.setCurrentFloor(e.getArrivingAt());
+		elevator.setDirection(e.getDirection());
 
-		this.elevFloorMap.put(elevId, e.getArrivingAt());
+		boolean elevatorShouldStop = elevator.shouldStopAtCurrentFloor();
 
-		Iterator<Request> queueIter = elevQueue.iterator();
-		while (queueIter.hasNext()) {
-			Request r = queueIter.next();
-			// Check if elevator is serving request
-			if (r.getSourceFloor() == e.getArrivingAt() || r.getDestFloor() == e.getArrivingAt()) {
-				elevatorShouldStop = true;
-
-				if (r.getDestFloor() == e.getArrivingAt()) {
-					queueIter.remove();
-				}
-			}
+		if (elevatorShouldStop) {
+			elevator.serviceFloor();
 		}
 
-		if (!this.masterQueue.isEmpty() && elevQueue.stream().allMatch(request -> request.getDirection() == e.getDirection())) {
+		if (!this.masterQueue.isEmpty()
+				&& (elevator.getServiceQueue().stream().allMatch(request -> request.isPickedUp() || (request.getDirection() == elevator.getDirection())))
+		) {
 			// Check for additional requests, elevator is not travelling opposite direction to pickup
 			synchronized (this.masterQueue) {
 				Iterator<Request> masterIter = this.masterQueue.iterator();
 				while (masterIter.hasNext()) {
 					Request r = masterIter.next();
-					if (r.getSourceFloor() == e.getArrivingAt() && r.getDirection() == e.getDirection()) {
+					if (r.getSourceFloor() == elevator.getCurrentFloor() && r.getDirection() == elevator.getDirection()) {
 						masterIter.remove();
-						elevQueue.add(r);
+						elevator.addRequestToService(r);
 						elevatorShouldStop = true;
 					}
 				}
@@ -154,7 +121,7 @@ public class Scheduler extends Host implements Runnable{
 	 * Accept new request from floor system.
 	 */
 	public void getRequest() {
-		DatagramPacket response = this.receive(this.socket);
+		DatagramPacket response = this.receive();
 
 		byte[] data = response.getData();
 		Request req = Host.deserialize(data, Request.class);  // convert byte to request
@@ -167,19 +134,23 @@ public class Scheduler extends Host implements Runnable{
 	 * assign request to an elevator
 	 */
 	public void dispatchRequest() {
-		DatagramPacket elevReq;
+		ElevatorStatus elevator;
 		Request req;
 		try {
-			elevReq = this.elevatorsNeedingService.take();
+			do {
+				// Get next request for an elevator that has no fault detected
+				elevator = this.elevators.get(this.elevatorsNeedingService.take());
+			} while (!elevator.isActive());
+
+			// Schedule next request in master queue
 			req = this.masterQueue.take();
 		} catch (InterruptedException e) {
 			throw new RuntimeException("Could not get elevator request");
 		}
 
-		int elevId = elevReq.getData()[0];
-		int elevFloor = this.elevFloorMap.get(elevId);
-		List<Request> elevQueue = this.elevQueueMap.get(elevId);
-		elevQueue.add(req);
+		elevator.addRequestToService(req);
+
+		int elevFloor = elevator.getCurrentFloor();
 
 		byte[] r = new byte[1];
 		if (elevFloor > req.getSourceFloor()) {
@@ -190,31 +161,33 @@ public class Scheduler extends Host implements Runnable{
 			r[0] = 0;
 		}
 
-		this.send(this.socket, r, elevReq.getAddress(), elevReq.getPort());
+		this.send(r, elevator.getAddress(), elevator.getPort());
 	}
 
 	/**
 	 * route the request to the elevator subsystem.
 	 */
 	private void handleRequests() {
-		DatagramPacket elevReq = this.receive(this.socket);
+		DatagramPacket elevReq = this.receive();
 		if (elevReq.getLength() == 1) {
-			int elevId = elevReq.getData()[0];
 			// Elevator is stopped and is looking for a new request
-			if (!this.elevQueueMap.containsKey(elevId)) {
-				this.registerElevator(elevId);
+			int elevId = elevReq.getData()[0];
+
+			if (!this.elevators.containsKey(elevId)) {
+				this.registerElevator(elevId, elevReq.getAddress(), elevReq.getPort());
 			}
 
-			List<Request> elevQueue = this.elevQueueMap.get(elevId);
+			ElevatorStatus elevator = this.elevators.get(elevId);
+			elevator.refreshLastReport(System.currentTimeMillis());
 
 			Request req;
 			byte[] r = new byte[1];
-			int elevFloor = this.elevFloorMap.get(elevId);
-			if (elevQueue.isEmpty()) {
-				this.elevatorsNeedingService.add(elevReq);
+			int elevFloor = elevator.getCurrentFloor();
+			if (elevator.getServiceQueue().isEmpty()) {
+				this.elevatorsNeedingService.add(elevId);
 			} else {
 				// serve request
-				req = elevQueue.get(0);
+				req = elevator.getServiceQueue().get(0);
 
 				if (elevFloor > req.getDestFloor()) {
 					r[0] = -1;
@@ -223,30 +196,81 @@ public class Scheduler extends Host implements Runnable{
 				} else {
 					r[0] = 0;
 				}
-				this.send(this.socket, r, elevReq.getAddress(), elevReq.getPort());
+				this.send(r, elevator.getAddress(), elevator.getPort());
 			}
 		} else {
 			// Elevator is sending a report
 			ElevatorReport er = Host.deserialize(elevReq.getData(), ElevatorReport.class);
-			this.log("Elevator " + er.getElevatorId() + " is at floor " + er.getArrivingAt());
+			int elevId = er.getElevatorId();
+			this.log("Elevator " + elevId + " is at floor " + er.getArrivingAt());
 
-			byte[] sendResp = {1};
-			if (!this.updateQueue(er)) {
-				sendResp[0] = 0;
+			ElevatorStatus elevator = this.elevators.get(elevId);
+			elevator.setCurrentFloor(er.getArrivingAt());
+			elevator.setDirection(er.getDirection());
+
+			long arrivedTime = System.currentTimeMillis();
+			elevator.refreshLastReport(arrivedTime);
+
+			// Schedule check to ensure new report before timeout
+			checkTimeout(elevator, elevId, arrivedTime);
+
+			byte[] sendResp = {0};
+			if (this.updateQueue(er)) {
+				if (elevator.getServiceQueue().stream().anyMatch(request ->
+						request.isTriggerFault() && request.getDestFloor() == elevator.getCurrentFloor()
+				)) {
+					// Trigger a fault
+					sendResp[0] = 2;
+				} else {
+					sendResp[0] = 1;
+				}
 			}
-			this.send(this.socket, sendResp, elevReq.getAddress(), elevReq.getPort());
+			this.send(sendResp, elevator.getAddress(), elevator.getPort());
 		}
+	}
+
+	public void checkTimeout(ElevatorStatus e, int elevId, long time) {
+		timer.schedule(new TimerTask() {
+			@Override
+			public void run() {
+				if (e.getLastReport() == time) {
+					shutDownElevator(elevId);
+				}
+			}
+		}, Config.TIMEOUT);
+	}
+
+	/**
+	 * Shut down an elevator
+	 * @param elevId the id of the elevator to shut down
+	 */
+	public void shutDownElevator(int elevId) {
+		this.log("Elevator " + elevId + " has timed out. Assuming fault.");
+
+		ElevatorStatus elevator = this.elevators.get(elevId);
+		elevator.setInactive();
+
+		// Transfer elevator's requests back to the master queue
+		for (Request r : elevator.getServiceQueue()) {
+			if (r.isPickedUp()) {
+				r.setSourceFloor(elevator.getCurrentFloor());
+				r.dropOff();
+			}
+
+			this.masterQueue.addFirst(r);
+		}
+
+		elevator.getServiceQueue().clear();
 	}
 
 	public static void main(String[] args) {
 		BlockingDeque<Request> master = new LinkedBlockingDeque<>();
-		BlockingDeque<DatagramPacket> reqsToServe = new LinkedBlockingDeque<>();
-		Map<Integer, List<Request>> queueMap = Collections.synchronizedMap(new HashMap<>(Config.NUMBER_OF_ELEVATORS));
-		Map<Integer, Integer> floorMap = Collections.synchronizedMap(new HashMap<>(Config.NUMBER_OF_ELEVATORS));
+		BlockingDeque<Integer> reqsToServe = new LinkedBlockingDeque<>();
+		Map<Integer, ElevatorStatus> elevators = Collections.synchronizedMap(new HashMap<>(Config.NUMBER_OF_ELEVATORS));
 
-		Scheduler elevScheduler = new Scheduler(master, reqsToServe, queueMap, floorMap, true, false);
-		Scheduler reqScheduler = new Scheduler(master, reqsToServe, queueMap, floorMap, true, true);
-		Scheduler floorScheduler = new Scheduler(master, reqsToServe, queueMap, floorMap, false, false);
+		Scheduler elevScheduler = new Scheduler(master, reqsToServe, elevators, true, false);
+		Scheduler reqScheduler = new Scheduler(master, reqsToServe, elevators, true, true);
+		Scheduler floorScheduler = new Scheduler(master, reqsToServe, elevators, false, false);
 
 		Thread elevSch = new Thread(elevScheduler);
 		Thread reqSch = new Thread(reqScheduler);
@@ -256,16 +280,20 @@ public class Scheduler extends Host implements Runnable{
 		reqSch.start();
 		floorSch.start();
 	}
-	
+
+	/**
+	 * Get the scheduler's master queue
+	 * @return the scheduler's master queue
+	 */
 	public Queue<Request> getMasterQueue(){
 		return masterQueue;
 	}
-	
-	public Map<Integer, List<Request>> getElevQueueMap(){
-		return elevQueueMap;
-	}
 
-	public int getPort() {
-		return this.socket.getLocalPort();
+	/**
+	 * Get the scheduler's elevator map
+	 * @return the scheduler's elevator map
+	 */
+	public Map<Integer, ElevatorStatus> getElevMap(){
+		return elevators;
 	}
 }

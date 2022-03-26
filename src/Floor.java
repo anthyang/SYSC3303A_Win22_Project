@@ -10,9 +10,7 @@ public class Floor extends Host implements Runnable {
     /** The input file for the program's requests */
     private String inputFile;
     private boolean finished_reading = false;
-    private DatagramSocket sendSock;
     private int sendPort;
-
 
     /**
      * Create a new floor subsystem controller
@@ -21,7 +19,6 @@ public class Floor extends Host implements Runnable {
     public Floor(String inputName) throws SocketException {
         super("Floor");
         this.inputFile = inputName;
-        sendSock = new DatagramSocket();    //Initialize the sending socket
         this.sendPort = Scheduler.NEW_REQUEST_PORT;
     }
 
@@ -32,7 +29,6 @@ public class Floor extends Host implements Runnable {
     public Floor(String inputName, int sendPort) throws SocketException {
         super("Floor");
         this.inputFile = inputName;
-        sendSock = new DatagramSocket();    //Initialize the sending socket
         this.sendPort = sendPort;
     }
 
@@ -42,10 +38,10 @@ public class Floor extends Host implements Runnable {
      * @param destFloor Passenger's destination floor
      * @param direction Direction pressed on the floor controller
      */
-    public void requestElevator(int sourceFloor, int destFloor, Direction direction){
-    	Request r = new Request(sourceFloor, destFloor, direction);
+    public void requestElevator(int sourceFloor, int destFloor, Direction direction, boolean triggerFault) {
+    	Request r = new Request(sourceFloor, destFloor, direction, triggerFault);
         byte[] s_request = Host.serialize(r);   //Turn the request object into a byte array
-        super.send(sendSock, s_request, InetAddress.getLoopbackAddress(), this.sendPort);    //send the request
+        super.send(s_request, InetAddress.getLoopbackAddress(), this.sendPort);    //send the request
         super.log("send request to scheduler.");
     }
 
@@ -68,8 +64,9 @@ public class Floor extends Host implements Runnable {
                     Direction chosenDirection = Direction.get(instructions[Config.DIRECTION_BUTTON]);
                     int sourceFloor = Integer.parseInt(instructions[Config.SOURCE_FLOOR]);
                     int destFloor = Integer.parseInt(instructions[Config.DEST_FLOOR]);
+                    boolean triggerFault = Boolean.parseBoolean(instructions[Config.TRIGGER_FAULT]);
 
-                    this.requestElevator(sourceFloor, destFloor, chosenDirection);
+                    this.requestElevator(sourceFloor, destFloor, chosenDirection, triggerFault);
                 }
             }
             finished_reading = true;

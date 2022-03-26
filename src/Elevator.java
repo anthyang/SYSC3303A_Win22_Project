@@ -1,7 +1,5 @@
 import java.net.DatagramPacket;
-import java.net.DatagramSocket;
 import java.net.InetAddress;
-import java.net.SocketException;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -18,16 +16,13 @@ public class Elevator extends Host implements Runnable {
 	private Direction direction;
 	private boolean doorsOpen;
 	private int sendPort;
-	private static int counter = 0;
 	private Timer timer;
 	private TimerTask timerTask;
 	private int openDoorTime = Config.DOOR_MOVEMENT;
-        
+	private boolean active;
+
     // add direction lamps to donate arrival and direction of an elevator at a floor
     private int dirLamps;
-    
-    // add datagram for notifying scheduler
-	private DatagramSocket sendSocket;
 
     /**
      * The Elevator constructor initializes all necessary variables.
@@ -42,13 +37,8 @@ public class Elevator extends Host implements Runnable {
     	this.dirLamps = 0; // -1 for down, 0 - not moving, 1 for up:
 		this.doorsOpen = true;
 		this.sendPort = Scheduler.ELEVATOR_UPDATE_PORT;
-    	
-        try {
-        	sendSocket = new DatagramSocket();
-         } catch (SocketException se) {
-            se.printStackTrace();
-         }
-
+		timer = new Timer("Timer "+id);//Making a new timer for each elevator
+		this.active = true;
     }
 
 	/**
@@ -65,25 +55,27 @@ public class Elevator extends Host implements Runnable {
 		this.doorsOpen = true;
 		this.sendPort = sendPort;
 		timer = new Timer("Timer "+id);//Making a new timer for each elevator
-		try {
-			sendSocket = new DatagramSocket();
-		} catch (SocketException se) {
-			se.printStackTrace();
-		}
 
+		this.active = true;
+		this.setTimeout(Config.TIMEOUT);
 	}
 
     /**
      * Picks up and drops off passengers endlessly
      */
     public void run() {
-		while (true) {
+		while (this.active) {
 			if (!this.doorsOpen) {
 				// Ensure passengers can load/unload
 				this.openDoor();
 			}
 			// Ask scheduler for next direction of travel
 			this.direction = this.serveNewRequest();
+			if (this.direction == null) {
+				// Null direction indicates hard fault
+				return;
+			}
+
 			if (this.direction == Direction.NOT_MOVING) {
 				// Notify the scheduler that the passengers have been picked up
 				this.notifyArrival(false);
@@ -97,15 +89,24 @@ public class Elevator extends Host implements Runnable {
 		}
     }
 
+	/**
+	 * Get a new direction of travel from the scheduler
+	 * @return the direction the elevator should travel
+	 */
 	public Direction serveNewRequest() {
 		byte[] id = { (byte)this.elevDoorNum };
 		// Response should be an array of one byte with -1, 0, or 1
 		DatagramPacket response = this.rpcCall(
-				this.sendSocket,
 				id,
 				InetAddress.getLoopbackAddress(),
 				this.sendPort
 		);
+
+		if (response == null) {
+			// rpcCall could not receive data from scheduler, shut down
+			this.active = false;
+			return null;
+		}
 
 		byte[] responseData = response.getData();
 		if (response.getLength() != 1 || responseData[0] < -1 || responseData[0] > 1) {
@@ -201,11 +202,16 @@ public class Elevator extends Host implements Runnable {
         byte[] msg = Host.serialize(report);
 
 		DatagramPacket response = this.rpcCall(
-				this.sendSocket,
 				msg,
 				InetAddress.getLoopbackAddress(),
 				this.sendPort
 		);
+
+		if (response == null) {
+			// rpcCall could not receive data from scheduler, shut down
+			this.active = false;
+			return true;
+		}
 
 		byte[] responseData = response.getData();
 		if (response.getLength() != 1 || (responseData[0] != 0 && responseData[0] != 1 && responseData[0] != 2)) {
@@ -236,14 +242,26 @@ public class Elevator extends Host implements Runnable {
 		}
 	}
 
+	/**
+	 * Get the elevator's direction of travel
+	 * @return the elevator's direction
+	 */
 	public Direction getDirection() {
 		return direction;
 	}
-	
+
+	/**
+	 * Update the elevator's direction
+	 * @param d the elevator's next direction of travel
+	 */
 	public void setElevatorDirection(Direction d) {
 		this.direction = d;
 	}
-	
+
+	/**
+	 * Get the elevator's current floor
+	 * @return the elevator's current floor
+	 */
 	public int getCurrentFloor() {
 		return currentFloor;
 	}
