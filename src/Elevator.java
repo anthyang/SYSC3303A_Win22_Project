@@ -2,6 +2,8 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
+import java.util.Timer;
+import java.util.TimerTask;
 
 /**
  * Elevator subsystem class receives information packets from the scheduler to control the elevator motors and to open the doors.
@@ -16,6 +18,10 @@ public class Elevator extends Host implements Runnable {
 	private Direction direction;
 	private boolean doorsOpen;
 	private int sendPort;
+	private static int counter = 0;
+	private Timer timer;
+	private TimerTask timerTask;
+	private int openDoorTime = Config.DOOR_MOVEMENT;
         
     // add direction lamps to donate arrival and direction of an elevator at a floor
     private int dirLamps;
@@ -58,7 +64,7 @@ public class Elevator extends Host implements Runnable {
 		this.dirLamps = 0; // -1 for down, 0 - not moving, 1 for up:
 		this.doorsOpen = true;
 		this.sendPort = sendPort;
-
+		timer = new Timer("Timer "+id);//Making a new timer for each elevator
 		try {
 			sendSocket = new DatagramSocket();
 		} catch (SocketException se) {
@@ -76,7 +82,6 @@ public class Elevator extends Host implements Runnable {
 				// Ensure passengers can load/unload
 				this.openDoor();
 			}
-
 			// Ask scheduler for next direction of travel
 			this.direction = this.serveNewRequest();
 			if (this.direction == Direction.NOT_MOVING) {
@@ -145,6 +150,21 @@ public class Elevator extends Host implements Runnable {
     private void openDoor() {    	
 		this.log("Opening doors at floor " + this.currentFloor);
 		this.doorsOpen = true;
+		timerTask = new TimerTask() {
+			/**
+			 * Timertask increase the counter by 1 every 1000ms, and this is controlled by the timer
+			 */
+			@Override
+			public void run() {
+					/* When counter reach 10, which means the door of the elevator has been open for 10 seconds
+					without closing, timer task will force elevator to close the door, cancel the timer while also
+					reset the counter to 0
+					 */
+					closeDoor();
+					openDoorTime = Config.DOOR_MOVEMENT;
+			}
+		};
+		timer.schedule(timerTask, 10000);
     	try {
     		Thread.sleep(Config.DOOR_MOVEMENT);
     	} catch (InterruptedException e) {
@@ -161,6 +181,7 @@ public class Elevator extends Host implements Runnable {
     private void closeDoor() {
     	this.log("Closing doors at floor " + this.currentFloor);
 		this.doorsOpen = false;
+		timerTask.cancel();
 		try {
     		Thread.sleep(Config.DOOR_MOVEMENT);
     	} catch (InterruptedException e) {
@@ -187,7 +208,7 @@ public class Elevator extends Host implements Runnable {
 		);
 
 		byte[] responseData = response.getData();
-		if (response.getLength() != 1 || (responseData[0] != 0 && responseData[0] != 1)) {
+		if (response.getLength() != 1 || (responseData[0] != 0 && responseData[0] != 1 && responseData[0] != 2)) {
 			throw new RuntimeException("Invalid response from Scheduler");
 		}
 
@@ -196,6 +217,8 @@ public class Elevator extends Host implements Runnable {
 			if (responseData[0] == 1) {
 				this.log("Stopping at floor " + this.currentFloor);
 				return true;
+			}else if(responseData[0] == 2){
+				openDoorTime = Config.ERROR_DOOR_MOVEMENT;
 			} else {
 				this.log("Nothing to service at floor " + this.currentFloor + ", continuing.");
 				return false;
