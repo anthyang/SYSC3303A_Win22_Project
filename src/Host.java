@@ -154,4 +154,11 @@ public abstract class Host {
     public int getPort() {
         return this.socket.getLocalPort();
     }
+    
+    /**
+     * Closes the socket for test classes.
+     */
+    public void closeSocket() {
+    	this.socket.close();
+    }
 }

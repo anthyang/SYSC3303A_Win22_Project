@@ -1,6 +1,8 @@
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.net.SocketException;
+import java.net.*;
+import java.util.*;
+import java.util.concurrent.*;
 
 import org.junit.jupiter.api.*;
 
@@ -14,7 +16,10 @@ class FloorTest {
     @BeforeAll
     public static void init() {
     	try {
-			s = new Scheduler(false);
+    		BlockingDeque<Request> master = new LinkedBlockingDeque<>();
+    		BlockingDeque<Integer> reqsToServe = new LinkedBlockingDeque<>();
+    		Map<Integer, ElevatorStatus> elevators = Collections.synchronizedMap(new HashMap<>(Config.NUMBER_OF_ELEVATORS));
+            s = new Scheduler(master, reqsToServe, elevators, false, false);
 			f = new Floor("test/inputTest", s.getPort());
 		} catch (SocketException e) {
 			e.printStackTrace();
@@ -68,5 +73,13 @@ class FloorTest {
         	assertEquals(r.getDestFloor(), 1);
         	assertEquals(r.getDirection(), Direction.DOWN);
     	}
+    }
+    
+    /**
+     * Closes all the sockets so that the other Test classes can bind properly.
+     */
+    @AfterAll
+    public static void closeSockets() {
+    	s.closeSockets();
     }
 }

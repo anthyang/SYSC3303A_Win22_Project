@@ -34,18 +34,19 @@ public class Scheduler extends Host implements Runnable{
 		this.elevators = elevators;
 		this.serveElevators = serveElevators;
 		this.serveNewRequests = serveNewRequests;
-	}
-
-	/**
-	 * Not thread safe. Use only for testing or single components
-	 * @param serveElevators true to listen to elevators, false otherwise
-	 */
-	public Scheduler(boolean serveElevators) {
-		super("Scheduler");
-		this.masterQueue = new LinkedBlockingDeque<>();
-		this.elevatorsNeedingService = new LinkedBlockingDeque<>();
-		this.serveElevators = serveElevators;
-		this.serveNewRequests = false;
+	    try {
+			if (serveElevators) {
+				if (serveNewRequests) {
+					socket = new DatagramSocket();
+				} else {
+					socket = new DatagramSocket(ELEVATOR_UPDATE_PORT);
+				}
+			} else {
+				socket = new DatagramSocket(NEW_REQUEST_PORT);
+			}
+         } catch (SocketException se) {
+            se.printStackTrace();
+         }
 	}
 
 	/**
@@ -268,6 +269,20 @@ public class Scheduler extends Host implements Runnable{
 		}
 
 		elevator.getServiceQueue().clear();
+	}
+	
+	/**
+	 * Calls Host class to close the socket.
+	 */
+	public void closeSockets() {
+		this.closeSocket();
+	}
+	
+	/**
+	 * Method used for test classes to close the socket.
+	 */
+	public void closeAllSockets() {
+		socket.close();
 	}
 
 	public static void main(String[] args) {

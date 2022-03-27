@@ -1,10 +1,12 @@
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.Assert.assertTrue;
 
 import java.net.InetAddress;
-
+import org.junit.jupiter.api.*;
+import java.net.*;
+import java.util.*;
+import java.util.concurrent.*;
 
 /**
  * This is the JUnit test case for the Scheduler in the Elevator system
@@ -13,9 +15,12 @@ class SchedulerTest {
     private static Elevator e;
     private static Scheduler s;
 
-    @BeforeAll
-    public static void init() {
-        s = new Scheduler(true);
+    @BeforeEach
+    public void init() {
+    	BlockingDeque<Request> master = new LinkedBlockingDeque<>();
+		BlockingDeque<Integer> reqsToServe = new LinkedBlockingDeque<>();
+		Map<Integer, ElevatorStatus> elevators = Collections.synchronizedMap(new HashMap<>(Config.NUMBER_OF_ELEVATORS));
+        s = new Scheduler(master, reqsToServe, elevators, true, false);
         e = new Elevator(1, Config.NUMBER_OF_FLOORS, s.getPort());
         
     }
@@ -27,6 +32,14 @@ class SchedulerTest {
     public void testRegisterElevator() {
     	s.registerElevator(1, InetAddress.getLoopbackAddress(), 9999);
     	assertTrue(s.getElevMap().containsKey(1));
+    }
+    
+    /**
+     * Closes all the sockets so that the other Test classes can bind properly.
+     */
+    @AfterEach
+    public void closeSockets() {
+    	s.closeSockets();
     }
     
 }
