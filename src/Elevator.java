@@ -21,6 +21,7 @@ public class Elevator extends Host implements Runnable {
 	private static int counter = 0;
 	private Timer timer;
 	private TimerTask timerTask;
+	private int openDoorTime = Config.DOOR_MOVEMENT;
         
     // add direction lamps to donate arrival and direction of an elevator at a floor
     private int dirLamps;
@@ -78,7 +79,6 @@ public class Elevator extends Host implements Runnable {
     public void run() {
 		while (true) {
 			if (!this.doorsOpen) {
-				//Start the timer with a with the delay of 20ms and perform the timer task every 1 second
 				// Ensure passengers can load/unload
 				this.openDoor();
 			}
@@ -161,6 +161,7 @@ public class Elevator extends Host implements Runnable {
 					reset the counter to 0
 					 */
 					closeDoor();
+					openDoorTime = Config.DOOR_MOVEMENT;
 			}
 		};
 		timer.schedule(timerTask, 10000);
@@ -207,7 +208,7 @@ public class Elevator extends Host implements Runnable {
 		);
 
 		byte[] responseData = response.getData();
-		if (response.getLength() != 1 || (responseData[0] != 0 && responseData[0] != 1)) {
+		if (response.getLength() != 1 || (responseData[0] != 0 && responseData[0] != 1 && responseData[0] != 2)) {
 			throw new RuntimeException("Invalid response from Scheduler");
 		}
 
@@ -216,6 +217,8 @@ public class Elevator extends Host implements Runnable {
 			if (responseData[0] == 1) {
 				this.log("Stopping at floor " + this.currentFloor);
 				return true;
+			}else if(responseData[0] == 2){
+				openDoorTime = 15000;
 			} else {
 				this.log("Nothing to service at floor " + this.currentFloor + ", continuing.");
 				return false;
