@@ -19,7 +19,6 @@ public class Elevator extends Host implements Runnable {
 	private Timer timer;
 	private TimerTask timerTask;
 	private int openDoorTime = Config.DOOR_MOVEMENT;
-	private boolean active;
 
     // add direction lamps to donate arrival and direction of an elevator at a floor
     private int dirLamps;
@@ -38,7 +37,9 @@ public class Elevator extends Host implements Runnable {
 		this.doorsOpen = true;
 		this.sendPort = Scheduler.ELEVATOR_UPDATE_PORT;
 		timer = new Timer("Timer "+id);//Making a new timer for each elevator
-		this.active = true;
+		timerTask = new TimerTask() {
+			public void run() {}
+		};
     }
 
 	/**
@@ -55,26 +56,22 @@ public class Elevator extends Host implements Runnable {
 		this.doorsOpen = true;
 		this.sendPort = sendPort;
 		timer = new Timer("Timer "+id);//Making a new timer for each elevator
-
-		this.active = true;
-		this.setTimeout(Config.TIMEOUT);
+		timerTask = new TimerTask() {
+			public void run() {}
+		};
 	}
 
     /**
      * Picks up and drops off passengers endlessly
      */
     public void run() {
-		while (this.active) {
+		while (true) {
 			if (!this.doorsOpen) {
 				// Ensure passengers can load/unload
 				this.openDoor();
 			}
 			// Ask scheduler for next direction of travel
 			this.direction = this.serveNewRequest();
-			if (this.direction == null) {
-				// Null direction indicates hard fault
-				return;
-			}
 
 			if (this.direction == Direction.NOT_MOVING) {
 				// Notify the scheduler that the passengers have been picked up
@@ -101,12 +98,6 @@ public class Elevator extends Host implements Runnable {
 				InetAddress.getLoopbackAddress(),
 				this.sendPort
 		);
-
-		if (response == null) {
-			// rpcCall could not receive data from scheduler, shut down
-			this.active = false;
-			return null;
-		}
 
 		byte[] responseData = response.getData();
 		if (response.getLength() != 1 || responseData[0] < -1 || responseData[0] > 1) {
@@ -157,20 +148,18 @@ public class Elevator extends Host implements Runnable {
 			 */
 			@Override
 			public void run() {
-					/* When counter reach 10, which means the door of the elevator has been open for 10 seconds
-					without closing, timer task will force elevator to close the door, cancel the timer while also
-					reset the counter to 0
-					 */
-					closeDoor();
-					openDoorTime = Config.DOOR_MOVEMENT;
+				log("Detected door fault, attempting to close doors again.");
+				closeDoor();
+				openDoorTime = Config.DOOR_MOVEMENT;
 			}
 		};
 		timer.schedule(timerTask, 10000);
     	try {
-    		Thread.sleep(Config.DOOR_MOVEMENT);
+    		Thread.sleep(openDoorTime);
     	} catch (InterruptedException e) {
     		e.printStackTrace();
     	}
+		timerTask.cancel();
     }
 
 
@@ -182,7 +171,6 @@ public class Elevator extends Host implements Runnable {
     private void closeDoor() {
     	this.log("Closing doors at floor " + this.currentFloor);
 		this.doorsOpen = false;
-		timerTask.cancel();
 		try {
     		Thread.sleep(Config.DOOR_MOVEMENT);
     	} catch (InterruptedException e) {
@@ -207,12 +195,6 @@ public class Elevator extends Host implements Runnable {
 				this.sendPort
 		);
 
-		if (response == null) {
-			// rpcCall could not receive data from scheduler, shut down
-			this.active = false;
-			return true;
-		}
-
 		byte[] responseData = response.getData();
 		if (response.getLength() != 1 || (responseData[0] != 0 && responseData[0] != 1 && responseData[0] != 2)) {
 			throw new RuntimeException("Invalid response from Scheduler");
@@ -220,11 +202,14 @@ public class Elevator extends Host implements Runnable {
 
 		if (wasMoving) {
 			// Log messages to say we're stopping
-			if (responseData[0] == 1) {
+			if (responseData[0] == 1 || responseData[0] == 2) {
 				this.log("Stopping at floor " + this.currentFloor);
+
+				if (responseData[0] == 2) {
+					openDoorTime = Config.ERROR_DOOR_MOVEMENT;
+				}
+
 				return true;
-			}else if(responseData[0] == 2){
-				openDoorTime = Config.ERROR_DOOR_MOVEMENT;
 			} else {
 				this.log("Nothing to service at floor " + this.currentFloor + ", continuing.");
 				return false;

@@ -45,18 +45,6 @@ public abstract class Host {
     }
 
     /**
-     * Set the socket's timeout
-     * @param timeout the socket's timeout
-     */
-    public void setTimeout(int timeout) {
-        try {
-            this.socket.setSoTimeout(timeout);
-        } catch (SocketException e) {
-            e.printStackTrace();
-        }
-    }
-
-    /**
      * Send a given payload to the specified address and port
      * @param data The data to send
      * @param addr The address for the packet

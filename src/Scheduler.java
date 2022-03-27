@@ -54,37 +54,40 @@ public class Scheduler extends Host implements Runnable{
 	 */
 	public void registerElevator(int id, InetAddress address, int port) {
 		// Assume all elevators start at first floor
-		this.elevators.put(id, new ElevatorStatus(1, Direction.NOT_MOVING, address, port));
+		this.elevators.put(id, new ElevatorStatus(id,1, Direction.NOT_MOVING, address, port));
 		this.log("Registering elevator " + id);
 	}
 
 	/**
 	 * Update the elevator's queue
 	 * @param e the elevator report
-	 * @return if the elevator should stop
+	 * @return > 1 if the elevator should stop, 0 if the elevator should continue
 	 */
-	public boolean updateQueue(ElevatorReport e) {
+	public int updateQueue(ElevatorReport e) {
 		int elevId = e.getElevatorId();
 		ElevatorStatus elevator = elevators.get(elevId);
 		elevator.setCurrentFloor(e.getArrivingAt());
 		elevator.setDirection(e.getDirection());
 
 		boolean elevatorShouldStop = elevator.shouldStopAtCurrentFloor();
+		boolean triggerFault = elevator.getServiceQueue().stream().anyMatch(
+				request -> request.isTriggerFault() && request.getDestFloor() == elevator.getCurrentFloor()
+		);
 
 		if (elevatorShouldStop) {
 			elevator.serviceFloor();
 		}
 
-		if (!this.masterQueue.isEmpty()
-				&& (elevator.getServiceQueue().stream().allMatch(request -> request.isPickedUp() || (request.getDirection() == elevator.getDirection())))
+		if (!this.masterQueue.isEmpty() && (elevator.getServiceQueue().stream().allMatch(Request::isPickedUp))
 		) {
-			// Check for additional requests, elevator is not travelling opposite direction to pickup
+			// Check for additional requests, elevator is in transit
 			synchronized (this.masterQueue) {
 				Iterator<Request> masterIter = this.masterQueue.iterator();
 				while (masterIter.hasNext()) {
 					Request r = masterIter.next();
 					if (r.getSourceFloor() == elevator.getCurrentFloor() && r.getDirection() == elevator.getDirection()) {
 						masterIter.remove();
+						this.log("Passing request with source floor " + r.getSourceFloor() + " to elevator " + elevId);
 						elevator.addRequestToService(r);
 						elevatorShouldStop = true;
 					}
@@ -92,7 +95,11 @@ public class Scheduler extends Host implements Runnable{
 			}
 		}
 
-		return elevatorShouldStop;
+		if (elevatorShouldStop) {
+			return triggerFault ? 2 : 1;
+		} else {
+			return 0;
+		}
 	}
 
 	@Override
@@ -148,6 +155,7 @@ public class Scheduler extends Host implements Runnable{
 			throw new RuntimeException("Could not get elevator request");
 		}
 
+		this.log("Passing request with source floor " + req.getSourceFloor() + " to elevator " + elevator.getId());
 		elevator.addRequestToService(req);
 
 		int elevFloor = elevator.getCurrentFloor();
@@ -215,10 +223,9 @@ public class Scheduler extends Host implements Runnable{
 			checkTimeout(elevator, elevId, arrivedTime);
 
 			byte[] sendResp = {0};
-			if (this.updateQueue(er)) {
-				if (elevator.getServiceQueue().stream().anyMatch(request ->
-						request.isTriggerFault() && request.getDestFloor() == elevator.getCurrentFloor()
-				)) {
+			int updateResult = this.updateQueue(er);
+			if (updateResult > 0) {
+				if (updateResult == 2) {
 					// Trigger a fault
 					sendResp[0] = 2;
 				} else {

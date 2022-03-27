@@ -7,6 +7,7 @@ import java.util.List;
  * Internal data structure for the scheduler to keep track of all elevator data
  */
 public class ElevatorStatus {
+    private int id;
     private Direction direction;
     private int currentFloor;
     private boolean active;
@@ -22,7 +23,8 @@ public class ElevatorStatus {
      * @param address the elevator's IP address
      * @param port the elevator's port
      */
-    public ElevatorStatus(int startingFloor, Direction direction, InetAddress address, int port) {
+    public ElevatorStatus(int id, int startingFloor, Direction direction, InetAddress address, int port) {
+        this.id = id;
         this.currentFloor = startingFloor;
         this.direction = direction;
         this.active = true;
@@ -30,6 +32,14 @@ public class ElevatorStatus {
         this.port = port;
         this.serviceQueue = Collections.synchronizedList(new LinkedList<>());
         this.lastReport = System.currentTimeMillis();
+    }
+
+    /**
+     * Get the elevator's id
+     * @return the elevator's id
+     */
+    public int getId() {
+        return id;
     }
 
     /**
