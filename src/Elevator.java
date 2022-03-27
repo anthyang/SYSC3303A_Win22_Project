@@ -218,7 +218,7 @@ public class Elevator extends Host implements Runnable {
 				this.log("Stopping at floor " + this.currentFloor);
 				return true;
 			}else if(responseData[0] == 2){
-				openDoorTime = 15000;
+				openDoorTime = Config.ERROR_DOOR_MOVEMENT;
 			} else {
 				this.log("Nothing to service at floor " + this.currentFloor + ", continuing.");
 				return false;

@@ -11,4 +11,5 @@ public class Config {
     public static final int SOURCE_FLOOR = 1;
     public static final int DIRECTION_BUTTON = 2;
     public static final int DEST_FLOOR = 3;
+	public static final int ERROR_DOOR_MOVEMENT = 15000;
 }
