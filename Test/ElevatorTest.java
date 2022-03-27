@@ -3,11 +3,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
 import java.net.InetAddress;
-import java.net.SocketException;
-import java.util.Set;
 
 //TODO make tests to floorLamps, currentFloor, direction, doorsOpen, serveNewRequest(), simMovement(), openDoor(), closeDoor(), addExternalRequest(), registerElevator()
 
@@ -47,8 +43,7 @@ class ElevatorTest {
     @Test
     public void testServeNewRequest() {
     	e.setElevatorDirection(Direction.UP);
-    	s.registerElevator(1);
-    	s.getElevQueueMap().get(1).add(new Request(1, 3, Direction.UP));
+    	s.registerElevator(1, InetAddress.getLoopbackAddress(), 9999);
     	for(int i = 0; i < 2; i++) {
     		e.simMovement();
     	}

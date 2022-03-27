@@ -1,7 +1,7 @@
 import java.net.DatagramPacket;
-import java.net.DatagramSocket;
 import java.net.InetAddress;
-import java.net.SocketException;
+import java.util.Timer;
+import java.util.TimerTask;
 
 /**
  * Elevator subsystem class receives information packets from the scheduler to control the elevator motors and to open the doors.
@@ -16,12 +16,12 @@ public class Elevator extends Host implements Runnable {
 	private Direction direction;
 	private boolean doorsOpen;
 	private int sendPort;
-        
+	private Timer timer;
+	private TimerTask timerTask;
+	private int openDoorTime = Config.DOOR_MOVEMENT;
+
     // add direction lamps to donate arrival and direction of an elevator at a floor
     private int dirLamps;
-    
-    // add datagram for notifying scheduler
-	private DatagramSocket sendSocket;
 
     /**
      * The Elevator constructor initializes all necessary variables.
@@ -36,13 +36,10 @@ public class Elevator extends Host implements Runnable {
     	this.dirLamps = 0; // -1 for down, 0 - not moving, 1 for up:
 		this.doorsOpen = true;
 		this.sendPort = Scheduler.ELEVATOR_UPDATE_PORT;
-    	
-        try {
-        	sendSocket = new DatagramSocket();
-         } catch (SocketException se) {
-            se.printStackTrace();
-         }
-
+		timer = new Timer("Timer "+id);//Making a new timer for each elevator
+		timerTask = new TimerTask() {
+			public void run() {}
+		};
     }
 
 	/**
@@ -58,13 +55,10 @@ public class Elevator extends Host implements Runnable {
 		this.dirLamps = 0; // -1 for down, 0 - not moving, 1 for up:
 		this.doorsOpen = true;
 		this.sendPort = sendPort;
-
-		try {
-			sendSocket = new DatagramSocket();
-		} catch (SocketException se) {
-			se.printStackTrace();
-		}
-
+		timer = new Timer("Timer "+id);//Making a new timer for each elevator
+		timerTask = new TimerTask() {
+			public void run() {}
+		};
 	}
 
     /**
@@ -76,9 +70,9 @@ public class Elevator extends Host implements Runnable {
 				// Ensure passengers can load/unload
 				this.openDoor();
 			}
-
 			// Ask scheduler for next direction of travel
 			this.direction = this.serveNewRequest();
+
 			if (this.direction == Direction.NOT_MOVING) {
 				// Notify the scheduler that the passengers have been picked up
 				this.notifyArrival(false);
@@ -92,11 +86,14 @@ public class Elevator extends Host implements Runnable {
 		}
     }
 
+	/**
+	 * Get a new direction of travel from the scheduler
+	 * @return the direction the elevator should travel
+	 */
 	public Direction serveNewRequest() {
 		byte[] id = { (byte)this.elevDoorNum };
 		// Response should be an array of one byte with -1, 0, or 1
 		DatagramPacket response = this.rpcCall(
-				this.sendSocket,
 				id,
 				InetAddress.getLoopbackAddress(),
 				this.sendPort
@@ -145,11 +142,24 @@ public class Elevator extends Host implements Runnable {
     private void openDoor() {    	
 		this.log("Opening doors at floor " + this.currentFloor);
 		this.doorsOpen = true;
+		timerTask = new TimerTask() {
+			/**
+			 * Timertask increase the counter by 1 every 1000ms, and this is controlled by the timer
+			 */
+			@Override
+			public void run() {
+				log("Detected door fault, attempting to close doors again.");
+				closeDoor();
+				openDoorTime = Config.DOOR_MOVEMENT;
+			}
+		};
+		timer.schedule(timerTask, 10000);
     	try {
-    		Thread.sleep(Config.DOOR_MOVEMENT);
+    		Thread.sleep(openDoorTime);
     	} catch (InterruptedException e) {
     		e.printStackTrace();
     	}
+		timerTask.cancel();
     }
 
 
@@ -180,21 +190,25 @@ public class Elevator extends Host implements Runnable {
         byte[] msg = Host.serialize(report);
 
 		DatagramPacket response = this.rpcCall(
-				this.sendSocket,
 				msg,
 				InetAddress.getLoopbackAddress(),
 				this.sendPort
 		);
 
 		byte[] responseData = response.getData();
-		if (response.getLength() != 1 || (responseData[0] != 0 && responseData[0] != 1)) {
+		if (response.getLength() != 1 || (responseData[0] != 0 && responseData[0] != 1 && responseData[0] != 2)) {
 			throw new RuntimeException("Invalid response from Scheduler");
 		}
 
 		if (wasMoving) {
 			// Log messages to say we're stopping
-			if (responseData[0] == 1) {
+			if (responseData[0] == 1 || responseData[0] == 2) {
 				this.log("Stopping at floor " + this.currentFloor);
+
+				if (responseData[0] == 2) {
+					openDoorTime = Config.ERROR_DOOR_MOVEMENT;
+				}
+
 				return true;
 			} else {
 				this.log("Nothing to service at floor " + this.currentFloor + ", continuing.");
@@ -213,14 +227,26 @@ public class Elevator extends Host implements Runnable {
 		}
 	}
 
+	/**
+	 * Get the elevator's direction of travel
+	 * @return the elevator's direction
+	 */
 	public Direction getDirection() {
 		return direction;
 	}
-	
+
+	/**
+	 * Update the elevator's direction
+	 * @param d the elevator's next direction of travel
+	 */
 	public void setElevatorDirection(Direction d) {
 		this.direction = d;
 	}
-	
+
+	/**
+	 * Get the elevator's current floor
+	 * @return the elevator's current floor
+	 */
 	public int getCurrentFloor() {
 		return currentFloor;
 	}
