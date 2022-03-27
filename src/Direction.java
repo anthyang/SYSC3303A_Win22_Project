@@ -29,6 +29,10 @@ public enum Direction {
         throw new IllegalArgumentException("Specified enum was not found");
     }
 
+    /**
+     * Get a readable string for the direction
+     * @return a readable string
+     */
     public String getReadable() {
         return this.readable;
     }

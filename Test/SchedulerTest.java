@@ -1,11 +1,9 @@
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.Assert.assertTrue;
 
-import java.util.List;
-import java.util.Queue;
+import java.net.InetAddress;
 
 
 /**
@@ -27,8 +25,8 @@ class SchedulerTest {
      */
     @Test
     public void testRegisterElevator() {
-    	s.registerElevator(1);
-    	assertTrue(s.getElevQueueMap().containsKey(1));
+    	s.registerElevator(1, InetAddress.getLoopbackAddress(), 9999);
+    	assertTrue(s.getElevMap().containsKey(1));
     }
     
 }

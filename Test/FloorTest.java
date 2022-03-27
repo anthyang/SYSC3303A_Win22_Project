@@ -37,7 +37,7 @@ class FloorTest {
      */
     @Test
     public void testRequestElevator() {
-    	f.requestElevator(0, 4, Direction.UP);
+    	f.requestElevator(0, 4, Direction.UP, false);
     	s.getRequest();
     	Request r = s.getMasterQueue().poll();
     	assertEquals(r.getSourceFloor(), 0);

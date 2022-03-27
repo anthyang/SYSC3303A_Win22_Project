@@ -1,5 +1,25 @@
-# Time Floor Button Car
-# hh:mm:ss:mmm n Up/Down n
-14:05:15:0 2 Up 4
-14:05:32:0 1 Up 4
-14:05:48:0 4 Down 1
+# Time Floor Button Car Fault
+# hh:mm:ss:mmm n Up/Down n true/false
+14:05:15:0 2 Up 4 false
+14:05:32:0 1 Up 4 false
+14:05:48:0 4 Down 1 true
+14:05:48:0 15 Down 1 false
+14:05:48:0 18 Down 1 false
+14:05:48:0 4 Up 14 false
+14:05:48:0 5 Up 14 false
+14:05:48:0 10 Down 5 false
+14:05:48:0 19 Down 4 false
+14:05:48:0 7 Up 16 false
+14:05:48:0 10 Up 11 false
+14:05:48:0 17 Down 6 false
+14:05:48:0 8 Up 11 false
+14:05:48:0 9 Up 10 false
+14:05:48:0 20 Down 1 false
+14:05:48:0 13 Down 7 false
+14:05:48:0 15 Down 2 false
+14:05:48:0 6 Up 7 false
+14:05:48:0 6 Up 18 false
+14:05:48:0 18 Up 20 false
+14:05:48:0 1 Up 6 false
+14:05:48:0 13 Down 5 false
+14:05:48:0 4 Down 1 false
