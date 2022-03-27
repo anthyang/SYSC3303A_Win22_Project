@@ -34,19 +34,6 @@ public class Scheduler extends Host implements Runnable{
 		this.elevators = elevators;
 		this.serveElevators = serveElevators;
 		this.serveNewRequests = serveNewRequests;
-	    try {
-			if (serveElevators) {
-				if (serveNewRequests) {
-					socket = new DatagramSocket();
-				} else {
-					socket = new DatagramSocket(ELEVATOR_UPDATE_PORT);
-				}
-			} else {
-				socket = new DatagramSocket(NEW_REQUEST_PORT);
-			}
-         } catch (SocketException se) {
-            se.printStackTrace();
-         }
 	}
 
 	/**
@@ -276,13 +263,6 @@ public class Scheduler extends Host implements Runnable{
 	 */
 	public void closeSockets() {
 		this.closeSocket();
-	}
-	
-	/**
-	 * Method used for test classes to close the socket.
-	 */
-	public void closeAllSockets() {
-		socket.close();
 	}
 
 	public static void main(String[] args) {
