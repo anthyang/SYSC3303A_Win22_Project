@@ -20,10 +20,9 @@ class ElevatorTest {
     @BeforeEach
     public void init() {
     	BlockingDeque<Request> master = new LinkedBlockingDeque<>();
-		BlockingDeque<DatagramPacket> reqsToServe = new LinkedBlockingDeque<>();
-		Map<Integer, List<Request>> queueMap = Collections.synchronizedMap(new HashMap<>(Config.NUMBER_OF_ELEVATORS));
-		Map<Integer, Integer> floorMap = Collections.synchronizedMap(new HashMap<>(Config.NUMBER_OF_ELEVATORS));
-        s = new Scheduler(master, reqsToServe, queueMap, floorMap, true, false);
+		BlockingDeque<Integer> reqsToServe = new LinkedBlockingDeque<>();
+		Map<Integer, ElevatorStatus> elevators = Collections.synchronizedMap(new HashMap<>(Config.NUMBER_OF_ELEVATORS));
+        s = new Scheduler(master, reqsToServe, elevators, true, false);
     	e = new Elevator(0, 10, s.getPort());
     }
 
@@ -60,6 +59,6 @@ class ElevatorTest {
      */
     @AfterEach
     public void closeSockets() {
-    	s.closeAllSockets();
+    	s.closeSockets();
     }
 }

@@ -17,10 +17,9 @@ class FloorTest {
     public static void init() {
     	try {
     		BlockingDeque<Request> master = new LinkedBlockingDeque<>();
-    		BlockingDeque<DatagramPacket> reqsToServe = new LinkedBlockingDeque<>();
-    		Map<Integer, List<Request>> queueMap = Collections.synchronizedMap(new HashMap<>(Config.NUMBER_OF_ELEVATORS));
-    		Map<Integer, Integer> floorMap = Collections.synchronizedMap(new HashMap<>(Config.NUMBER_OF_ELEVATORS));
-            s = new Scheduler(master, reqsToServe, queueMap, floorMap, false, false);
+    		BlockingDeque<Integer> reqsToServe = new LinkedBlockingDeque<>();
+    		Map<Integer, ElevatorStatus> elevators = Collections.synchronizedMap(new HashMap<>(Config.NUMBER_OF_ELEVATORS));
+            s = new Scheduler(master, reqsToServe, elevators, false, false);
 			f = new Floor("test/inputTest", s.getPort());
 		} catch (SocketException e) {
 			e.printStackTrace();
@@ -81,6 +80,6 @@ class FloorTest {
      */
     @AfterAll
     public static void closeSockets() {
-    	s.closeAllSockets();
+    	s.closeSockets();
     }
 }

@@ -25,10 +25,9 @@ public class IntegrationTest {
 	@BeforeEach
 	public void init() {
 		BlockingDeque<Request> master = new LinkedBlockingDeque<>();
-		BlockingDeque<DatagramPacket> reqsToServe = new LinkedBlockingDeque<>();
-		Map<Integer, List<Request>> queueMap = Collections.synchronizedMap(new HashMap<>(Config.NUMBER_OF_ELEVATORS));
-		Map<Integer, Integer> floorMap = Collections.synchronizedMap(new HashMap<>(Config.NUMBER_OF_ELEVATORS));
-        s = new Scheduler(master, reqsToServe, queueMap, floorMap, false, false);
+		BlockingDeque<Integer> reqsToServe = new LinkedBlockingDeque<>();
+		Map<Integer, ElevatorStatus> elevators = Collections.synchronizedMap(new HashMap<>(Config.NUMBER_OF_ELEVATORS));
+        s = new Scheduler(master, reqsToServe, elevators, false, false);
 		e1 = new Elevator(1, 7, s.getPort());
 		s.registerElevator(1, InetAddress.getLoopbackAddress(), 9999);
 		e2 = new Elevator(2, 7, s.getPort());
@@ -62,6 +61,6 @@ public class IntegrationTest {
      */
     @AfterEach
     public void closeSockets() {
-    	s.closeAllSockets();
+    	s.closeSockets();
     }
 }

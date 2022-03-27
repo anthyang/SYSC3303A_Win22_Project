@@ -1,4 +1,3 @@
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.Assert.assertTrue;
@@ -6,7 +5,6 @@ import static org.junit.Assert.assertTrue;
 import java.net.InetAddress;
 import org.junit.jupiter.api.*;
 
-import java.net.*;
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -20,10 +18,9 @@ class SchedulerTest {
     @BeforeEach
     public void init() {
     	BlockingDeque<Request> master = new LinkedBlockingDeque<>();
-		BlockingDeque<DatagramPacket> reqsToServe = new LinkedBlockingDeque<>();
-		Map<Integer, List<Request>> queueMap = Collections.synchronizedMap(new HashMap<>(Config.NUMBER_OF_ELEVATORS));
-		Map<Integer, Integer> floorMap = Collections.synchronizedMap(new HashMap<>(Config.NUMBER_OF_ELEVATORS));
-        s = new Scheduler(master, reqsToServe, queueMap, floorMap, true, false);
+		BlockingDeque<Integer> reqsToServe = new LinkedBlockingDeque<>();
+		Map<Integer, ElevatorStatus> elevators = Collections.synchronizedMap(new HashMap<>(Config.NUMBER_OF_ELEVATORS));
+        s = new Scheduler(master, reqsToServe, elevators, true, false);
         e = new Elevator(1, Config.NUMBER_OF_FLOORS, s.getPort());
         
     }
@@ -42,7 +39,7 @@ class SchedulerTest {
      */
     @AfterEach
     public void closeSockets() {
-    	s.closeAllSockets();
+    	s.closeSockets();
     }
     
 }

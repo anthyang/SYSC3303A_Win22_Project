@@ -259,10 +259,10 @@ public class Scheduler extends Host implements Runnable{
 	}
 	
 	/**
-	 * Method used for test classes to close the socket.
+	 * Calls Host class to close the socket.
 	 */
-	public void closeAllSockets() {
-		socket.close();
+	public void closeSockets() {
+		this.closeSocket();
 	}
 
 	public static void main(String[] args) {
