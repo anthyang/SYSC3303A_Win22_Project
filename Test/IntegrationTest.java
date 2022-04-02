@@ -48,7 +48,7 @@ public class IntegrationTest {
 	 */
 	@Test
 	public void testAddFloorRequestToScheduler() {
-		f.requestElevator(3, 4, Direction.UP, false);
+		f.requestElevator(3, 4, Direction.UP, "none");
 		s.getRequest();
 		Request r = s.getMasterQueue().peek();
 		assertEquals(r.getSourceFloor(), 3);

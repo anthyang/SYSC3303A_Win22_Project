@@ -1,0 +1,5 @@
+# Time Floor Button Car Fault
+# hh:mm:ss:mmm n Up/Down n none/transient/hard
+14:05:15:0 2 Up 4 transient
+14:05:25:0 3 Up 1 none
+14:05:32:0 1 Down 4 hard

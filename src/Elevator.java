@@ -65,7 +65,7 @@ public class Elevator extends Host implements Runnable {
      * Picks up and drops off passengers endlessly
      */
     public void run() {
-		while (true) {
+		while (!Thread.interrupted()) {
 			if (!this.doorsOpen) {
 				// Ensure passengers can load/unload
 				this.openDoor();
@@ -149,8 +149,13 @@ public class Elevator extends Host implements Runnable {
 			@Override
 			public void run() {
 				log("Detected door fault, attempting to close doors again.");
-				closeDoor();
-				openDoorTime = Config.DOOR_MOVEMENT;
+				try {
+					Thread.sleep(2000);
+					closeDoor();
+					openDoorTime = Config.DOOR_MOVEMENT;
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
 			}
 		};
 		timer.schedule(timerTask, 10000);
@@ -204,9 +209,11 @@ public class Elevator extends Host implements Runnable {
 			// Log messages to say we're stopping
 			if (responseData[0] == 1 || responseData[0] == 2) {
 				this.log("Stopping at floor " + this.currentFloor);
-
-				if (responseData[0] == 2) {
+				if (responseData[0] == 1) {
 					openDoorTime = Config.ERROR_DOOR_MOVEMENT;
+				}else if (responseData[0] == 2){
+					this.log("Detect hard fault. Trigger hard fault solution for Elevator "+elevDoorNum);
+					Thread.currentThread().interrupt();
 				}
 
 				return true;
