@@ -56,7 +56,7 @@ public class Scheduler extends Host implements Runnable{
 		ElevatorStatus elevator = elevators.get(elevId);
 		elevator.setCurrentFloor(e.getArrivingAt());
 		elevator.setDirection(e.getDirection());
-		String[] faultTypes = {"hard", "transient", "none"};
+		String[] faultTypes = {"hard", "transient"};
 
 		boolean elevatorShouldStop = elevator.shouldStopAtCurrentFloor();
 		boolean triggerFault = elevator.getServiceQueue().stream().anyMatch(
@@ -66,8 +66,8 @@ public class Scheduler extends Host implements Runnable{
 		String trigger = "";
 		if(triggerFault){
 			trigger = elevator.getServiceQueue().stream().filter(request -> Arrays.stream(faultTypes).anyMatch(request.isTriggerFault()::contains)
-					).findFirst().get().isTriggerFault();
-			System.out.println("Fault find in elevator "+ elevId+ ": "+trigger);
+					&& request.getDestFloor() == elevator.getCurrentFloor()).findFirst().get().isTriggerFault();
+			log("Fault find in elevator "+elevId+": "+trigger);
 		}
 
 		if (elevatorShouldStop) {
@@ -93,11 +93,11 @@ public class Scheduler extends Host implements Runnable{
 
 		if (elevatorShouldStop) {
 			if(trigger.equals("hard")){
-				return 2;
+				return 3;
 			}else if(trigger.equals("transient")){
-				return 1;
+				return 2;
 			}else{
-				return 0;
+				return 1;
 			}
 		} else {
 			return 0;
@@ -223,17 +223,7 @@ public class Scheduler extends Host implements Runnable{
 
 			// Schedule check to ensure new report before timeout
 			checkTimeout(elevator, elevId, arrivedTime);
-			byte[] sendResp = {0};
-			int updateResult = this.updateQueue(er);
-			if (updateResult > 0) {
-				if (updateResult == 2) {
-					// Trigger hard fault
-					sendResp[0] = 2;
-				} else if (updateResult == 1){
-					// Trigger transient fault
-					sendResp[0] = 1;
-				}
-			}
+			byte[] sendResp = { (byte)this.updateQueue(er) };
 			this.send(sendResp, elevator.getAddress(), elevator.getPort());
 		}
 	}

@@ -82,7 +82,7 @@ public class Floor extends Host implements Runnable {
     public boolean doneReading() {return finished_reading;}
 
     public static void main(String[] args) throws SocketException {
-        Floor floor = new Floor("src/inputTest");
+        Floor floor = new Floor("src/input");
         Thread floorSystem = new Thread(floor);
         floorSystem.start();
     }
