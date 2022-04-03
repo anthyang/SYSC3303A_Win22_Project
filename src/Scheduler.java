@@ -19,6 +19,8 @@ public class Scheduler extends Host implements Runnable{
 	public static int ELEVATOR_UPDATE_PORT = 5000;
 	public static int NEW_REQUEST_PORT = 5001;
 
+	public ConsoleGUI gui;
+
 	/**
 	 * Scheduler constructor
 	 */
@@ -27,7 +29,8 @@ public class Scheduler extends Host implements Runnable{
 			BlockingDeque<Integer> needingService,
 			Map<Integer, ElevatorStatus> elevators,
 			boolean serveElevators,
-			boolean serveNewRequests
+			boolean serveNewRequests,
+			ConsoleGUI ui
 	) {
 		super("Scheduler", serveElevators ? (serveNewRequests ? 0 : ELEVATOR_UPDATE_PORT) : NEW_REQUEST_PORT);
 		this.masterQueue = syncList;
@@ -35,6 +38,7 @@ public class Scheduler extends Host implements Runnable{
 		this.elevators = elevators;
 		this.serveElevators = serveElevators;
 		this.serveNewRequests = serveNewRequests;
+		this.gui = ui;
 	}
 
 	/**
@@ -68,8 +72,10 @@ public class Scheduler extends Host implements Runnable{
 		if(triggerFault){
 			trigger = elevator.getServiceQueue().stream().filter(request -> Arrays.stream(faultTypes).anyMatch(request.isTriggerFault()::contains)
 					&& request.getDestFloor() == elevator.getCurrentFloor()).findFirst().get().isTriggerFault();
-			log("Fault find in elevator "+elevId+": "+trigger);
-			faultList.add(trigger);
+			String fault = "Fault find in elevator " + elevId + ": " + trigger;
+			log(fault);
+			faultList.add(fault);
+			compileFaults();
 		}
 
 		if (elevatorShouldStop) {
@@ -246,7 +252,10 @@ public class Scheduler extends Host implements Runnable{
 	 * @param elevId the id of the elevator to shut down
 	 */
 	public void shutDownElevator(int elevId) {
-		this.log("Elevator " + elevId + " has timed out. Assuming fault.");
+		String fault = "Elevator " + elevId + " has timed out. Assuming fault.";
+		this.log(fault);
+		faultList.add(fault);
+		compileFaults();
 
 		ElevatorStatus elevator = this.elevators.get(elevId);
 		elevator.setInactive();
@@ -271,24 +280,6 @@ public class Scheduler extends Host implements Runnable{
 		this.closeSocket();
 	}
 
-	public static void main(String[] args) {
-		BlockingDeque<Request> master = new LinkedBlockingDeque<>();
-		BlockingDeque<Integer> reqsToServe = new LinkedBlockingDeque<>();
-		Map<Integer, ElevatorStatus> elevators = Collections.synchronizedMap(new HashMap<>(Config.NUMBER_OF_ELEVATORS));
-
-		Scheduler elevScheduler = new Scheduler(master, reqsToServe, elevators, true, false);
-		Scheduler reqScheduler = new Scheduler(master, reqsToServe, elevators, true, true);
-		Scheduler floorScheduler = new Scheduler(master, reqsToServe, elevators, false, false);
-
-		Thread elevSch = new Thread(elevScheduler);
-		Thread reqSch = new Thread(reqScheduler);
-		Thread floorSch = new Thread(floorScheduler);
-
-		elevSch.start();
-		reqSch.start();
-		floorSch.start();
-	}
-
 	/**
 	 * Get the scheduler's master queue
 	 * @return the scheduler's master queue
@@ -305,9 +296,11 @@ public class Scheduler extends Host implements Runnable{
 		return elevators;
 	}
 
-	/**
-	 * Return the array list of fault detected
-	 * @return the scheduler's detected fault list
-	 */
-	public ArrayList<String> getFaultList() { return faultList; }
+	public void compileFaults() {
+		StringBuilder sb = new StringBuilder();
+		for(String s : faultList) {
+			sb.append(s).append("\n").append("\n");
+		}
+		gui.displayFaults(sb.toString());
+	}
 }
