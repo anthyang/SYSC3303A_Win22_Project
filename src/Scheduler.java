@@ -49,6 +49,7 @@ public class Scheduler extends Host implements Runnable{
 		// Assume all elevators start at first floor
 		this.elevators.put(id, new ElevatorStatus(id,1, Direction.NOT_MOVING, address, port));
 		this.log("Registering elevator " + id);
+		gui.displayElevatorStatus(id, this.elevators.get(id).isActive());
 	}
 
 	/**
@@ -221,10 +222,12 @@ public class Scheduler extends Host implements Runnable{
 			ElevatorReport er = Host.deserialize(elevReq.getData(), ElevatorReport.class);
 			int elevId = er.getElevatorId();
 			this.log("Elevator " + elevId + " is at floor " + er.getArrivingAt());
+			gui.displayElevatorPos(elevId, er.getArrivingAt());
 
 			ElevatorStatus elevator = this.elevators.get(elevId);
 			elevator.setCurrentFloor(er.getArrivingAt());
 			elevator.setDirection(er.getDirection());
+			gui.displayElevatorDirection(elevId, er.getDirection());
 
 			long arrivedTime = System.currentTimeMillis();
 			elevator.refreshLastReport(arrivedTime);
@@ -254,11 +257,10 @@ public class Scheduler extends Host implements Runnable{
 	public void shutDownElevator(int elevId) {
 		String fault = "Elevator " + elevId + " has timed out. Assuming fault.";
 		this.log(fault);
-		faultList.add(fault);
-		compileFaults();
 
 		ElevatorStatus elevator = this.elevators.get(elevId);
 		elevator.setInactive();
+		gui.displayElevatorStatus(elevId, elevator.isActive());
 
 		// Transfer elevator's requests back to the master queue
 		for (Request r : elevator.getServiceQueue()) {

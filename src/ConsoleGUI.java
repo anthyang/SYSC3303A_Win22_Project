@@ -1,6 +1,7 @@
 import javax.swing.*;
 import javax.swing.border.Border;
 import java.awt.*;
+import java.net.SocketException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -193,20 +194,26 @@ public class ConsoleGUI extends JFrame {
         }
     }
 
-    public void displayElevatorStatus(int elevatorID, String status) {
+    public void displayElevatorStatus(int elevatorID, boolean status) {
+        String statusStr;
+        if(status) {
+            statusStr = "Active";
+        } else {
+            statusStr = "Inactive";
+        }
         switch(elevatorID) {
             case(1):
-                elevatorOneStatus.setText(" Status: " + status);
+                elevatorOneStatus.setText(" Status: " + statusStr);
             case(2):
-                elevatorTwoStatus.setText(" Status: " + status);
+                elevatorTwoStatus.setText(" Status: " + statusStr);
             case(3):
-                elevatorThreeStatus.setText(" Status: " + status);
+                elevatorThreeStatus.setText(" Status: " + statusStr);
             case(4):
-                elevatorFourStatus.setText(" Status " + status);
+                elevatorFourStatus.setText(" Status: " + statusStr);
         }
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws SocketException {
         ConsoleGUI gui = new ConsoleGUI();
 
         BlockingDeque<Request> master = new LinkedBlockingDeque<>();
@@ -224,5 +231,15 @@ public class ConsoleGUI extends JFrame {
         elevSch.start();
         reqSch.start();
         floorSch.start();
+
+        for (int i = 1; i <= Config.NUMBER_OF_ELEVATORS; i++) {
+            Elevator elevator = new Elevator(i, Config.NUMBER_OF_FLOORS);
+            Thread elevatorSystem = new Thread(elevator);
+            elevatorSystem.start();
+        }
+
+        Floor floor = new Floor("src/input");
+        Thread floorSystem = new Thread(floor);
+        floorSystem.start();
     }
 }

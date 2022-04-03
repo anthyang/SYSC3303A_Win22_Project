@@ -231,14 +231,6 @@ public class Elevator extends Host implements Runnable {
 		return true;
 	}
 
-	public static void main(String[] args) {
-		for (int i = 1; i <= Config.NUMBER_OF_ELEVATORS; i++) {
-			Elevator elevator = new Elevator(i, Config.NUMBER_OF_FLOORS);
-			Thread elevatorSystem = new Thread(elevator);
-			elevatorSystem.start();
-		}
-	}
-
 	/**
 	 * Get the elevator's direction of travel
 	 * @return the elevator's direction
