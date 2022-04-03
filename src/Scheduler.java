@@ -14,6 +14,7 @@ public class Scheduler extends Host implements Runnable{
 	private static Timer timer = new Timer();
 	private boolean serveElevators;
 	private boolean serveNewRequests;
+	private ArrayList<String> faultList = new ArrayList<String>();
 
 	public static int ELEVATOR_UPDATE_PORT = 5000;
 	public static int NEW_REQUEST_PORT = 5001;
@@ -68,6 +69,7 @@ public class Scheduler extends Host implements Runnable{
 			trigger = elevator.getServiceQueue().stream().filter(request -> Arrays.stream(faultTypes).anyMatch(request.isTriggerFault()::contains)
 					&& request.getDestFloor() == elevator.getCurrentFloor()).findFirst().get().isTriggerFault();
 			log("Fault find in elevator "+elevId+": "+trigger);
+			faultList.add(trigger);
 		}
 
 		if (elevatorShouldStop) {
@@ -261,7 +263,7 @@ public class Scheduler extends Host implements Runnable{
 
 		elevator.getServiceQueue().clear();
 	}
-	
+
 	/**
 	 * Calls Host class to close the socket.
 	 */
@@ -302,4 +304,10 @@ public class Scheduler extends Host implements Runnable{
 	public Map<Integer, ElevatorStatus> getElevMap(){
 		return elevators;
 	}
+
+	/**
+	 * Return the array list of fault detected
+	 * @return the scheduler's detected fault list
+	 */
+	public ArrayList<String> getFaultList() { return faultList; }
 }
