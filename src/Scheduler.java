@@ -14,9 +14,12 @@ public class Scheduler extends Host implements Runnable{
 	private static Timer timer = new Timer();
 	private boolean serveElevators;
 	private boolean serveNewRequests;
+	private ArrayList<String> faultList = new ArrayList<String>();
 
 	public static int ELEVATOR_UPDATE_PORT = 5000;
 	public static int NEW_REQUEST_PORT = 5001;
+
+	public ConsoleGUI gui;
 
 	/**
 	 * Scheduler constructor
@@ -26,7 +29,8 @@ public class Scheduler extends Host implements Runnable{
 			BlockingDeque<Integer> needingService,
 			Map<Integer, ElevatorStatus> elevators,
 			boolean serveElevators,
-			boolean serveNewRequests
+			boolean serveNewRequests,
+			ConsoleGUI ui
 	) {
 		super("Scheduler", serveElevators ? (serveNewRequests ? 0 : ELEVATOR_UPDATE_PORT) : NEW_REQUEST_PORT);
 		this.masterQueue = syncList;
@@ -34,6 +38,7 @@ public class Scheduler extends Host implements Runnable{
 		this.elevators = elevators;
 		this.serveElevators = serveElevators;
 		this.serveNewRequests = serveNewRequests;
+		this.gui = ui;
 	}
 
 	/**
@@ -44,6 +49,7 @@ public class Scheduler extends Host implements Runnable{
 		// Assume all elevators start at first floor
 		this.elevators.put(id, new ElevatorStatus(id,1, Direction.NOT_MOVING, address, port));
 		this.log("Registering elevator " + id);
+		gui.displayElevatorStatus(id, this.elevators.get(id).isActive());
 	}
 
 	/**
@@ -56,11 +62,24 @@ public class Scheduler extends Host implements Runnable{
 		ElevatorStatus elevator = elevators.get(elevId);
 		elevator.setCurrentFloor(e.getArrivingAt());
 		elevator.setDirection(e.getDirection());
+		String[] faultTypes = {"hard", "transient"};
 
 		boolean elevatorShouldStop = elevator.shouldStopAtCurrentFloor();
 		boolean triggerFault = elevator.getServiceQueue().stream().anyMatch(
-				request -> request.isTriggerFault() && request.getDestFloor() == elevator.getCurrentFloor()
+				request -> Arrays.stream(faultTypes).anyMatch(request.isTriggerFault()::contains) &&
+						request.getDestFloor() == elevator.getCurrentFloor()
 		);
+		String trigger = "";
+		if(triggerFault){
+			trigger = elevator.getServiceQueue().stream().filter(request -> Arrays.stream(faultTypes).anyMatch(request.isTriggerFault()::contains)
+					&& request.getDestFloor() == elevator.getCurrentFloor()).findFirst().get().isTriggerFault();
+			if(trigger.equals("transient")) {
+				String fault = "Fault find in elevator " + elevId + ": " + trigger;
+				log(fault);
+				faultList.add(fault);
+				compileFaults();
+			}
+		}
 
 		if (elevatorShouldStop) {
 			elevator.serviceFloor();
@@ -84,7 +103,13 @@ public class Scheduler extends Host implements Runnable{
 		}
 
 		if (elevatorShouldStop) {
-			return triggerFault ? 2 : 1;
+			if(trigger.equals("hard")){
+				return 3;
+			}else if(trigger.equals("transient")){
+				return 2;
+			}else{
+				return 1;
+			}
 		} else {
 			return 0;
 		}
@@ -181,6 +206,8 @@ public class Scheduler extends Host implements Runnable{
 			int elevFloor = elevator.getCurrentFloor();
 			if (elevator.getServiceQueue().isEmpty()) {
 				this.elevatorsNeedingService.add(elevId);
+				elevator.setDirection(Direction.NOT_MOVING);
+				gui.displayElevatorDirection(elevator.getId(), elevator.getDirection());
 			} else {
 				// serve request
 				req = elevator.getServiceQueue().get(0);
@@ -199,27 +226,19 @@ public class Scheduler extends Host implements Runnable{
 			ElevatorReport er = Host.deserialize(elevReq.getData(), ElevatorReport.class);
 			int elevId = er.getElevatorId();
 			this.log("Elevator " + elevId + " is at floor " + er.getArrivingAt());
+			gui.displayElevatorPos(elevId, er.getArrivingAt());
 
 			ElevatorStatus elevator = this.elevators.get(elevId);
 			elevator.setCurrentFloor(er.getArrivingAt());
 			elevator.setDirection(er.getDirection());
+			gui.displayElevatorDirection(elevId, er.getDirection());
 
 			long arrivedTime = System.currentTimeMillis();
 			elevator.refreshLastReport(arrivedTime);
 
 			// Schedule check to ensure new report before timeout
 			checkTimeout(elevator, elevId, arrivedTime);
-
-			byte[] sendResp = {0};
-			int updateResult = this.updateQueue(er);
-			if (updateResult > 0) {
-				if (updateResult == 2) {
-					// Trigger a fault
-					sendResp[0] = 2;
-				} else {
-					sendResp[0] = 1;
-				}
-			}
+			byte[] sendResp = { (byte)this.updateQueue(er) };
 			this.send(sendResp, elevator.getAddress(), elevator.getPort());
 		}
 	}
@@ -240,10 +259,18 @@ public class Scheduler extends Host implements Runnable{
 	 * @param elevId the id of the elevator to shut down
 	 */
 	public void shutDownElevator(int elevId) {
-		this.log("Elevator " + elevId + " has timed out. Assuming fault.");
+		String fault = "Elevator " + elevId + " has timed out. Assuming fault.";
+		this.log(fault);
 
 		ElevatorStatus elevator = this.elevators.get(elevId);
 		elevator.setInactive();
+		String faultHard = "Fault find in elevator " + elevId + ": hard";
+		faultList.add(faultHard);
+		compileFaults();
+		gui.displayElevatorStatus(elevId, elevator.isActive());
+
+		elevator.setDirection(Direction.NOT_MOVING);
+		gui.displayElevatorDirection(elevator.getId(), elevator.getDirection());
 
 		// Transfer elevator's requests back to the master queue
 		for (Request r : elevator.getServiceQueue()) {
@@ -257,30 +284,12 @@ public class Scheduler extends Host implements Runnable{
 
 		elevator.getServiceQueue().clear();
 	}
-	
+
 	/**
 	 * Calls Host class to close the socket.
 	 */
 	public void closeSockets() {
 		this.closeSocket();
-	}
-
-	public static void main(String[] args) {
-		BlockingDeque<Request> master = new LinkedBlockingDeque<>();
-		BlockingDeque<Integer> reqsToServe = new LinkedBlockingDeque<>();
-		Map<Integer, ElevatorStatus> elevators = Collections.synchronizedMap(new HashMap<>(Config.NUMBER_OF_ELEVATORS));
-
-		Scheduler elevScheduler = new Scheduler(master, reqsToServe, elevators, true, false);
-		Scheduler reqScheduler = new Scheduler(master, reqsToServe, elevators, true, true);
-		Scheduler floorScheduler = new Scheduler(master, reqsToServe, elevators, false, false);
-
-		Thread elevSch = new Thread(elevScheduler);
-		Thread reqSch = new Thread(reqScheduler);
-		Thread floorSch = new Thread(floorScheduler);
-
-		elevSch.start();
-		reqSch.start();
-		floorSch.start();
 	}
 
 	/**
@@ -297,5 +306,16 @@ public class Scheduler extends Host implements Runnable{
 	 */
 	public Map<Integer, ElevatorStatus> getElevMap(){
 		return elevators;
+	}
+
+	/**
+	 * Compile ArrayList of fault strings and send to GUI.
+	 */
+	public void compileFaults() {
+		StringBuilder sb = new StringBuilder();
+		for(String s : faultList) {
+			sb.append(s).append("\n").append("\n");
+		}
+		gui.displayFaults(sb.toString());
 	}
 }

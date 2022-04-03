@@ -27,7 +27,7 @@ public class IntegrationTest {
 		BlockingDeque<Request> master = new LinkedBlockingDeque<>();
 		BlockingDeque<Integer> reqsToServe = new LinkedBlockingDeque<>();
 		Map<Integer, ElevatorStatus> elevators = Collections.synchronizedMap(new HashMap<>(Config.NUMBER_OF_ELEVATORS));
-        s = new Scheduler(master, reqsToServe, elevators, false, false);
+        s = new Scheduler(master, reqsToServe, elevators, false, false, new ConsoleGUI());
 		e1 = new Elevator(1, 7, s.getPort());
 		s.registerElevator(1, InetAddress.getLoopbackAddress(), 9999);
 		e2 = new Elevator(2, 7, s.getPort());
@@ -48,7 +48,7 @@ public class IntegrationTest {
 	 */
 	@Test
 	public void testAddFloorRequestToScheduler() {
-		f.requestElevator(3, 4, Direction.UP, false);
+		f.requestElevator(3, 4, Direction.UP, "none");
 		s.getRequest();
 		Request r = s.getMasterQueue().peek();
 		assertEquals(r.getSourceFloor(), 3);

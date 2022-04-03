@@ -38,7 +38,7 @@ public class Floor extends Host implements Runnable {
      * @param destFloor Passenger's destination floor
      * @param direction Direction pressed on the floor controller
      */
-    public void requestElevator(int sourceFloor, int destFloor, Direction direction, boolean triggerFault) {
+    public void requestElevator(int sourceFloor, int destFloor, Direction direction, String triggerFault) {
     	Request r = new Request(sourceFloor, destFloor, direction, triggerFault);
         byte[] s_request = Host.serialize(r);   //Turn the request object into a byte array
         super.send(s_request, InetAddress.getLoopbackAddress(), this.sendPort);    //send the request
@@ -64,7 +64,7 @@ public class Floor extends Host implements Runnable {
                     Direction chosenDirection = Direction.get(instructions[Config.DIRECTION_BUTTON]);
                     int sourceFloor = Integer.parseInt(instructions[Config.SOURCE_FLOOR]);
                     int destFloor = Integer.parseInt(instructions[Config.DEST_FLOOR]);
-                    boolean triggerFault = Boolean.parseBoolean(instructions[Config.TRIGGER_FAULT]);
+                    String triggerFault = new String(instructions[Config.TRIGGER_FAULT]);
 
                     this.requestElevator(sourceFloor, destFloor, chosenDirection, triggerFault);
                 }
@@ -81,9 +81,4 @@ public class Floor extends Host implements Runnable {
      */
     public boolean doneReading() {return finished_reading;}
 
-    public static void main(String[] args) throws SocketException {
-        Floor floor = new Floor("src/input");
-        Thread floorSystem = new Thread(floor);
-        floorSystem.start();
-    }
 }

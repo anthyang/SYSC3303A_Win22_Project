@@ -19,7 +19,7 @@ class FloorTest {
     		BlockingDeque<Request> master = new LinkedBlockingDeque<>();
     		BlockingDeque<Integer> reqsToServe = new LinkedBlockingDeque<>();
     		Map<Integer, ElevatorStatus> elevators = Collections.synchronizedMap(new HashMap<>(Config.NUMBER_OF_ELEVATORS));
-            s = new Scheduler(master, reqsToServe, elevators, false, false);
+            s = new Scheduler(master, reqsToServe, elevators, false, false, new ConsoleGUI());
 			f = new Floor("test/inputTest", s.getPort());
 		} catch (SocketException e) {
 			e.printStackTrace();
@@ -42,7 +42,7 @@ class FloorTest {
      */
     @Test
     public void testRequestElevator() {
-    	f.requestElevator(0, 4, Direction.UP, false);
+    	f.requestElevator(0, 4, Direction.UP, "none");
     	s.getRequest();
     	Request r = s.getMasterQueue().poll();
     	assertEquals(r.getSourceFloor(), 0);

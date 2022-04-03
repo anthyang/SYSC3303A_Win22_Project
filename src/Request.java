@@ -7,7 +7,7 @@ public class Request implements Serializable {
     private int sourceFloor;
     private int destFloor;
     private Direction direction;
-    private boolean triggerFault;
+    private String triggerFault;
     private boolean pickedUp;
 
     /**
@@ -16,7 +16,7 @@ public class Request implements Serializable {
      * @param destFloor The floor the passenger would like to visit
      * @param direction The direction the elevator needs to move
      */
-    public Request(int sourceFloor, int destFloor, Direction direction, boolean triggerFault) {
+    public Request(int sourceFloor, int destFloor, Direction direction, String triggerFault) {
         this.sourceFloor = sourceFloor;
         this.destFloor = destFloor;
         this.direction = direction;
@@ -60,7 +60,7 @@ public class Request implements Serializable {
      * Check whether the request should trigger a fault in the elevator
      * @return true if a fault will be triggered
      */
-    public boolean isTriggerFault() {
+    public String isTriggerFault() {
         return triggerFault;
     }
 

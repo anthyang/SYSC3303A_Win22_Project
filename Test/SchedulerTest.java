@@ -1,12 +1,15 @@
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertTrue;
-
 import java.net.InetAddress;
-import org.junit.jupiter.api.*;
-import java.net.*;
-import java.util.*;
-import java.util.concurrent.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.BlockingDeque;
+import java.util.concurrent.LinkedBlockingDeque;
+
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * This is the JUnit test case for the Scheduler in the Elevator system
@@ -20,7 +23,7 @@ class SchedulerTest {
     	BlockingDeque<Request> master = new LinkedBlockingDeque<>();
 		BlockingDeque<Integer> reqsToServe = new LinkedBlockingDeque<>();
 		Map<Integer, ElevatorStatus> elevators = Collections.synchronizedMap(new HashMap<>(Config.NUMBER_OF_ELEVATORS));
-        s = new Scheduler(master, reqsToServe, elevators, true, false);
+        s = new Scheduler(master, reqsToServe, elevators, true, false, new ConsoleGUI());
         e = new Elevator(1, Config.NUMBER_OF_FLOORS, s.getPort());
         
     }

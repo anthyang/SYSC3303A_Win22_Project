@@ -65,7 +65,7 @@ public class Elevator extends Host implements Runnable {
      * Picks up and drops off passengers endlessly
      */
     public void run() {
-		while (true) {
+		while (!Thread.interrupted()) {
 			if (!this.doorsOpen) {
 				// Ensure passengers can load/unload
 				this.openDoor();
@@ -139,27 +139,35 @@ public class Elevator extends Host implements Runnable {
      * Simulates the doors of the elevator opening given the DOOR_MOVEMENT constant which
      * is calculated to be half the average unloading/loading time.
      */
-    private void openDoor() {    	
+    private void openDoor() {
 		this.log("Opening doors at floor " + this.currentFloor);
-		this.doorsOpen = true;
 		timerTask = new TimerTask() {
 			/**
-			 * Timertask increase the counter by 1 every 1000ms, and this is controlled by the timer
+			 * Timertask Trigger open door once the timerTask thread start running
 			 */
 			@Override
 			public void run() {
-				log("Detected door fault, attempting to close doors again.");
-				closeDoor();
-				openDoorTime = Config.DOOR_MOVEMENT;
+				log("Detected transient fault.");
+
+				try {
+					Thread.sleep(2000);
+					openDoorTime = Config.DOOR_MOVEMENT;
+					Thread.sleep(openDoorTime);
+					log("Door opened at floor "+currentFloor);
+					doorsOpen = true;
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
 			}
 		};
-		timer.schedule(timerTask, 10000);
+		timer.schedule(timerTask, Config.TIMER_WAIT);
     	try {
     		Thread.sleep(openDoorTime);
+			this.doorsOpen = true;
+			timerTask.cancel();
     	} catch (InterruptedException e) {
     		e.printStackTrace();
     	}
-		timerTask.cancel();
     }
 
 
@@ -176,6 +184,7 @@ public class Elevator extends Host implements Runnable {
     	} catch (InterruptedException e) {
     		e.printStackTrace();
     	}
+		timerTask.cancel();
     }
 
 	/**
@@ -196,19 +205,22 @@ public class Elevator extends Host implements Runnable {
 		);
 
 		byte[] responseData = response.getData();
-		if (response.getLength() != 1 || (responseData[0] != 0 && responseData[0] != 1 && responseData[0] != 2)) {
+
+		if (response.getLength() != 1 || !(responseData[0] >= 0 && responseData[0] <= 3)) {
+			log(responseData[0] + "");
 			throw new RuntimeException("Invalid response from Scheduler");
 		}
 
 		if (wasMoving) {
 			// Log messages to say we're stopping
-			if (responseData[0] == 1 || responseData[0] == 2) {
+			if (responseData[0] > 0) {
 				this.log("Stopping at floor " + this.currentFloor);
-
 				if (responseData[0] == 2) {
 					openDoorTime = Config.ERROR_DOOR_MOVEMENT;
+				}else if (responseData[0] == 3){
+					this.log("Detect hard fault. Trigger hard fault solution for Elevator "+elevDoorNum);
+					Thread.currentThread().interrupt();
 				}
-
 				return true;
 			} else {
 				this.log("Nothing to service at floor " + this.currentFloor + ", continuing.");
@@ -217,14 +229,6 @@ public class Elevator extends Host implements Runnable {
 		}
 
 		return true;
-	}
-
-	public static void main(String[] args) {
-		for (int i = 1; i <= Config.NUMBER_OF_ELEVATORS; i++) {
-			Elevator elevator = new Elevator(i, Config.NUMBER_OF_FLOORS);
-			Thread elevatorSystem = new Thread(elevator);
-			elevatorSystem.start();
-		}
 	}
 
 	/**
