@@ -8,6 +8,9 @@ import java.util.Map;
 import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.LinkedBlockingDeque;
 
+/**
+ * GUI class for Project.
+ */
 public class ConsoleGUI extends JFrame {
 
     private JLabel elevatorOneFloorNum;
@@ -31,6 +34,9 @@ public class ConsoleGUI extends JFrame {
     Color space = new Color (128, 128, 128);
     Color white = new Color(255, 255, 255);
 
+    /**
+     * Constructor to initialize Swing components.
+     */
     public ConsoleGUI() {
         super("Elevator Monitoring");
         this.setLayout(new GridLayout(3, 2, 2, 2));
@@ -39,6 +45,9 @@ public class ConsoleGUI extends JFrame {
         this.setBackground(white);
         this.setResizable(false);
 
+        /*
+        Elevator One Control Panel
+         */
         JPanel elevatorOnePanel = new JPanel(new GridLayout(2, 2, 1, 1));
         elevatorOnePanel.setBackground(nardo);
         Border raisedBevel = BorderFactory.createRaisedBevelBorder();
@@ -67,6 +76,9 @@ public class ConsoleGUI extends JFrame {
         elevatorOnePanel.add(elevatorOneDirection);
         elevatorOnePanel.add(elevatorOneStatus);
 
+        /*
+        Elevator Two Control Panel
+         */
         JPanel elevatorTwoPanel = new JPanel(new GridLayout(2, 2, 1, 1));
         elevatorTwoPanel.setBackground(space);
         Border loweredBevel = BorderFactory.createLoweredBevelBorder();
@@ -92,6 +104,9 @@ public class ConsoleGUI extends JFrame {
         elevatorTwoPanel.add(elevatorTwoDirection);
         elevatorTwoPanel.add(elevatorTwoStatus);
 
+        /*
+        Elevator Three Control Panel
+         */
         JPanel elevatorThreePanel = new JPanel(new GridLayout(2, 2, 1, 1));
         elevatorThreePanel.setBackground(space);
         elevatorThreePanel.setBorder(loweredBevel);
@@ -116,6 +131,9 @@ public class ConsoleGUI extends JFrame {
         elevatorThreePanel.add(elevatorThreeDirection);
         elevatorThreePanel.add(elevatorThreeStatus);
 
+        /*
+        Elevator Four Control Panel
+         */
         JPanel elevatorFourPanel = new JPanel(new GridLayout(2, 2, 1, 1));
         elevatorFourPanel.setBackground(nardo);
         elevatorFourPanel.setBorder(raisedBevel);
@@ -140,6 +158,9 @@ public class ConsoleGUI extends JFrame {
         elevatorFourPanel.add(elevatorFourDirection);
         elevatorFourPanel.add(elevatorFourStatus);
 
+        /*
+        Fault List Text Label
+         */
         JLabel faultListText = new JLabel();
         faultListText.setText("Fault List: ");
         faultListText.setHorizontalAlignment(JLabel.CENTER);
@@ -148,6 +169,9 @@ public class ConsoleGUI extends JFrame {
         faultListText.setFont(bold);
         faultListText.setMinimumSize(new Dimension(350, 200));
 
+        /*
+        Fault List Scrollable Pane
+         */
         faultList = new JTextArea("No faults");
         JScrollPane faultScrollPane = new JScrollPane(faultList);
         faultScrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
@@ -160,40 +184,58 @@ public class ConsoleGUI extends JFrame {
         this.add(elevatorFourPanel);
         this.add(faultListText);
         this.add(faultScrollPane);
-
-        this.setVisible(true);
     }
 
+    /*
+    Display updated faults.
+     */
     public void displayFaults(String faults) {
         faultList.setText(faults);
     }
 
+    /*
+    Display updated elevator floor position.
+     */
     public void displayElevatorPos(int elevatorID, int positionNum) {
         switch(elevatorID) {
             case(1):
                 elevatorOneFloorNum.setText(" Floor Number: " + positionNum);
+                break;
             case(2):
                 elevatorTwoFloorNum.setText(" Floor Number: " + positionNum);
+                break;
             case(3):
                 elevatorThreeFloorNum.setText(" Floor Number: " + positionNum);
+                break;
             case(4):
                 elevatorFourFloorNum.setText(" Floor Number: " + positionNum);
+                break;
         }
     }
 
+    /*
+    Display updated elevator direction.
+     */
     public void displayElevatorDirection(int elevatorID, Direction dir) {
         switch(elevatorID) {
             case(1):
                 elevatorOneDirection.setText(" Direction: " + dir.toString());
+                break;
             case(2):
                 elevatorTwoDirection.setText(" Direction: " + dir.toString());
+                break;
             case(3):
                 elevatorThreeDirection.setText(" Direction: " + dir.toString());
+                break;
             case(4):
                 elevatorFourDirection.setText(" Direction: " + dir.toString());
+                break;
         }
     }
 
+    /*
+    Display updated elevator status.
+     */
     public void displayElevatorStatus(int elevatorID, boolean status) {
         String statusStr;
         if(status) {
@@ -204,17 +246,29 @@ public class ConsoleGUI extends JFrame {
         switch(elevatorID) {
             case(1):
                 elevatorOneStatus.setText(" Status: " + statusStr);
+                break;
             case(2):
                 elevatorTwoStatus.setText(" Status: " + statusStr);
+                break;
             case(3):
                 elevatorThreeStatus.setText(" Status: " + statusStr);
+                break;
             case(4):
                 elevatorFourStatus.setText(" Status: " + statusStr);
+                break;
         }
+    }
+
+    /*
+    Set GUI frame to visible.
+     */
+    private void display() {
+        this.setVisible(true);
     }
 
     public static void main(String[] args) throws SocketException {
         ConsoleGUI gui = new ConsoleGUI();
+        gui.display();
 
         BlockingDeque<Request> master = new LinkedBlockingDeque<>();
         BlockingDeque<Integer> reqsToServe = new LinkedBlockingDeque<>();

@@ -5,7 +5,7 @@
 public class Config {
 	public static final int DOOR_MOVEMENT = 4590;
     public static final int ERROR_DOOR_MOVEMENT = 15000;
-    public static final int ELEVATOR_MOVEMENT = 10;
+    public static final int ELEVATOR_MOVEMENT = 2832;
     public static final int TIMEOUT = 20000;
     public static final int NUMBER_OF_ELEVATORS = 4;
     public static final int NUMBER_OF_FLOORS = 20;

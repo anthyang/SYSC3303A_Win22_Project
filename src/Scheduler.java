@@ -73,10 +73,12 @@ public class Scheduler extends Host implements Runnable{
 		if(triggerFault){
 			trigger = elevator.getServiceQueue().stream().filter(request -> Arrays.stream(faultTypes).anyMatch(request.isTriggerFault()::contains)
 					&& request.getDestFloor() == elevator.getCurrentFloor()).findFirst().get().isTriggerFault();
-			String fault = "Fault find in elevator " + elevId + ": " + trigger;
-			log(fault);
-			faultList.add(fault);
-			compileFaults();
+			if(trigger.equals("transient")) {
+				String fault = "Fault find in elevator " + elevId + ": " + trigger;
+				log(fault);
+				faultList.add(fault);
+				compileFaults();
+			}
 		}
 
 		if (elevatorShouldStop) {
@@ -204,6 +206,8 @@ public class Scheduler extends Host implements Runnable{
 			int elevFloor = elevator.getCurrentFloor();
 			if (elevator.getServiceQueue().isEmpty()) {
 				this.elevatorsNeedingService.add(elevId);
+				elevator.setDirection(Direction.NOT_MOVING);
+				gui.displayElevatorDirection(elevator.getId(), elevator.getDirection());
 			} else {
 				// serve request
 				req = elevator.getServiceQueue().get(0);
@@ -260,7 +264,13 @@ public class Scheduler extends Host implements Runnable{
 
 		ElevatorStatus elevator = this.elevators.get(elevId);
 		elevator.setInactive();
+		String faultHard = "Fault find in elevator " + elevId + ": hard";
+		faultList.add(faultHard);
+		compileFaults();
 		gui.displayElevatorStatus(elevId, elevator.isActive());
+
+		elevator.setDirection(Direction.NOT_MOVING);
+		gui.displayElevatorDirection(elevator.getId(), elevator.getDirection());
 
 		// Transfer elevator's requests back to the master queue
 		for (Request r : elevator.getServiceQueue()) {
@@ -298,6 +308,9 @@ public class Scheduler extends Host implements Runnable{
 		return elevators;
 	}
 
+	/**
+	 * Compile ArrayList of fault strings and send to GUI.
+	 */
 	public void compileFaults() {
 		StringBuilder sb = new StringBuilder();
 		for(String s : faultList) {
