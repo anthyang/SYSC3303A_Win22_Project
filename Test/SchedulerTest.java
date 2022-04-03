@@ -23,7 +23,7 @@ class SchedulerTest {
     	BlockingDeque<Request> master = new LinkedBlockingDeque<>();
 		BlockingDeque<Integer> reqsToServe = new LinkedBlockingDeque<>();
 		Map<Integer, ElevatorStatus> elevators = Collections.synchronizedMap(new HashMap<>(Config.NUMBER_OF_ELEVATORS));
-        s = new Scheduler(master, reqsToServe, elevators, true, false, null);
+        s = new Scheduler(master, reqsToServe, elevators, true, false, new ConsoleGUI());
         e = new Elevator(1, Config.NUMBER_OF_FLOORS, s.getPort());
         
     }
