@@ -5,10 +5,12 @@ import javax.swing.border.TitledBorder;
 import java.awt.*;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * GUI class for Project.
@@ -40,6 +42,9 @@ public class ConsoleGUI extends JFrame {
     private ArrayList<JCheckBox> elevLamps;
 
     private JTextArea faultList;
+
+    private static final ImageIcon OFF = new ImageIcon("resources/off.png");
+    private static final ImageIcon ON = new ImageIcon("resources/on.png");
 
     Color nardo = new Color (192, 192, 192);
     Color space = new Color (128, 128, 128);
@@ -213,6 +218,7 @@ public class ConsoleGUI extends JFrame {
         	elevLamps.add(new JCheckBox("" + ((i % Config.NUMBER_OF_FLOORS) + 1)));
         	elevLamps.get(i).setSelected(false);
         	elevLamps.get(i).setOpaque(false);
+        	elevLamps.get(i).setIcon(OFF);
         	switch(i / Config.NUMBER_OF_FLOORS) {
         		case(0):
         			lampElevOne.add(elevLamps.get(i));
@@ -315,6 +321,14 @@ public class ConsoleGUI extends JFrame {
             case(4):
                 elevatorFourStatus.setText(" Status: " + statusStr);
                 break;
+        }
+    }
+
+    public void updateLamps(int elevId, List<Request> requests) {
+        Set<Integer> pressedButtons = requests.stream().filter(Request::isPickedUp).map(Request::getDestFloor).collect(Collectors.toSet());
+        for (int i = 0; i < Config.NUMBER_OF_FLOORS; i++) {
+            ImageIcon icon = pressedButtons.contains(i + 1) ? ON : OFF;
+            elevLamps.get(i + (elevId - 1) * Config.NUMBER_OF_FLOORS).setIcon(icon);
         }
     }
 

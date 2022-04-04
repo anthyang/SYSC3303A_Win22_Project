@@ -83,6 +83,7 @@ public class Scheduler extends Host implements Runnable{
 
 		if (elevatorShouldStop) {
 			elevator.serviceFloor();
+			gui.updateLamps(elevId, elevator.getServiceQueue());
 		}
 
 		if (!this.masterQueue.isEmpty() && (elevator.getServiceQueue().stream().allMatch(Request::isPickedUp))
@@ -96,6 +97,7 @@ public class Scheduler extends Host implements Runnable{
 						masterIter.remove();
 						this.log("Passing request with source floor " + r.getSourceFloor() + " to elevator " + elevId);
 						elevator.addRequestToService(r);
+						gui.updateLamps(elevId, elevator.getServiceQueue());
 						elevatorShouldStop = true;
 					}
 				}
@@ -172,6 +174,7 @@ public class Scheduler extends Host implements Runnable{
 
 		this.log("Passing request with source floor " + req.getSourceFloor() + " to elevator " + elevator.getId());
 		elevator.addRequestToService(req);
+		gui.updateLamps(elevator.getId(), elevator.getServiceQueue());
 
 		int elevFloor = elevator.getCurrentFloor();
 
