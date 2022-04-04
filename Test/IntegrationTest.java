@@ -56,6 +56,33 @@ public class IntegrationTest {
 		assertEquals(r.getDirection(), Direction.UP);
 	}
 	
+    /**
+     * Test transient faults for UP and DOWN directions
+     */
+    @Test
+    public void testTransientFault() {
+    	// test for transient fault:
+		Request r = new Request(1, 4, Direction.UP, "transient");
+    	assertEquals(r.isTriggerFault(), "transient");   
+    	// test for transient fault:
+		Request r2 = new Request(6, 2, Direction.DOWN, "transient");
+    	assertEquals(r.isTriggerFault(), "transient"); 
+    }    
+    
+    /**
+     * Test for hard faults for UP and DOWN directions
+     */
+    @Test
+    public void testHardFault() {
+    	// test for transient fault:
+		Request r3 = new Request(1, 4, Direction.UP, "hard");
+    	assertEquals(r3.isTriggerFault(), "hard");   
+    	// test for transient fault:
+		Request r4 = new Request(6, 2, Direction.DOWN, "hard");
+    	assertEquals(r4.isTriggerFault(), "hard"); 
+    }    
+	
+	
 	/**
      * Closes all the sockets so that the other Test classes can bind properly.
      */

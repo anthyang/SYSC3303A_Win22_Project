@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.LinkedBlockingDeque;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -36,6 +37,17 @@ class SchedulerTest {
     	s.registerElevator(1, InetAddress.getLoopbackAddress(), 9999);
     	assertTrue(s.getElevMap().containsKey(1));
     }
+    
+    /**
+     * test for faulty error 
+     */
+    @Test
+    public void testFault() {
+        Request r = new Request(1, 3, Direction.UP, "hard");        
+        s.registerElevator(1, InetAddress.getLoopbackAddress(), 9999);     
+        ElevatorReport eReport = new ElevatorReport(1, Direction.UP, 3);
+    	assertEquals(s.updateQueue(eReport), 0);
+    }    
     
     /**
      * Closes all the sockets so that the other Test classes can bind properly.

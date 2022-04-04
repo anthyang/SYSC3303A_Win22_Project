@@ -52,7 +52,17 @@ class ElevatorTest {
     		e.simMovement();
     	}
     	assertEquals(3, e.getCurrentFloor());
-    }
+    }    
+    /**
+     * test transient/hard error in elevator
+     */
+    @Test
+    public void testError() {
+    	ElevatorStatus e = new ElevatorStatus(0, 1, Direction.UP, InetAddress.getLoopbackAddress(), 9999);
+    	e.setInactive();
+    	assertEquals(e.isActive(), false);
+    }  
+    
     
     /**
      * Closes all the sockets so that the other Test classes can bind properly.
