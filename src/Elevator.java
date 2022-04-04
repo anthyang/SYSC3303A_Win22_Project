@@ -1,4 +1,5 @@
 import java.net.DatagramPacket;
+import java.lang.Math;
 import java.net.InetAddress;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -18,6 +19,8 @@ public class Elevator extends Host implements Runnable {
 	private int sendPort;
 	private Timer timer;
 	private TimerTask timerTask;
+	private StopWatch serviceTimer = new StopWatch();
+	private StopWatch loadTimer = new StopWatch();
 	private int openDoorTime = Config.DOOR_MOVEMENT;
 
     // add direction lamps to donate arrival and direction of an elevator at a floor
@@ -70,6 +73,8 @@ public class Elevator extends Host implements Runnable {
 				// Ensure passengers can load/unload
 				this.openDoor();
 			}
+			this.log("Loading/Unloading Passengers");
+			loadTimer.start();
 			// Ask scheduler for next direction of travel
 			this.direction = this.serveNewRequest();
 
@@ -78,10 +83,16 @@ public class Elevator extends Host implements Runnable {
 				this.notifyArrival(false);
 			} else {
 				this.closeDoor();
+				this.log("Loading/unloading time was " + (loadTimer.end() / Math.pow(10, 6)) + " msec");
+				loadTimer.reset();
 				do {
 					// Move elevator up/down until the scheduler tells it to stop and open its doors
+					serviceTimer.start();
 					this.simMovement();
 				} while (!this.notifyArrival(true));
+				serviceTimer.end();
+				this.log("Servicing time was " + (serviceTimer.end() / Math.pow(10, 6)) + " msec");
+				serviceTimer.reset();
 			}
 		}
     }

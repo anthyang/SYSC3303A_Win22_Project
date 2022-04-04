@@ -1,7 +1,6 @@
 import java.util.*;
 import java.net.*;
 import java.util.concurrent.BlockingDeque;
-import java.util.concurrent.LinkedBlockingDeque;
 
 /**
  * The scheduler class
@@ -12,9 +11,11 @@ public class Scheduler extends Host implements Runnable{
 	private BlockingDeque<Integer> elevatorsNeedingService;
 	private Map<Integer, ElevatorStatus> elevators;
 	private static Timer timer = new Timer();
+	private StopWatch totalTime = new StopWatch();
 	private boolean serveElevators;
 	private boolean serveNewRequests;
-	private ArrayList<String> faultList = new ArrayList<String>();
+	private ArrayList<String> faultList = new ArrayList<>();
+	private static int requestsServed = 0;
 
 	public static int ELEVATOR_UPDATE_PORT = 5000;
 	public static int NEW_REQUEST_PORT = 5001;
@@ -117,6 +118,7 @@ public class Scheduler extends Host implements Runnable{
 
 	@Override
 	public void run() {
+		this.totalTime.start();
 		if (this.serveElevators) {
 			if (this.serveNewRequests) {
 				while (true) {
@@ -148,6 +150,7 @@ public class Scheduler extends Host implements Runnable{
 		this.log("Received Request from floor: source floor " + req.getSourceFloor());
 
 		this.masterQueue.add(req);
+		this.requestsServed++;
 	}
 
 	/**
@@ -240,6 +243,12 @@ public class Scheduler extends Host implements Runnable{
 			checkTimeout(elevator, elevId, arrivedTime);
 			byte[] sendResp = { (byte)this.updateQueue(er) };
 			this.send(sendResp, elevator.getAddress(), elevator.getPort());
+
+			if (this.doneScheduling()) {
+				long total = totalTime.end();
+				this.log("Total running time was " + total / Math.pow(10, 9) + " sec");
+				this.log("Served " + requestsServed + " requests. Avg time per request: " + total / requestsServed / Math.pow(10, 9) + " sec");
+			}
 		}
 	}
 
@@ -317,5 +326,15 @@ public class Scheduler extends Host implements Runnable{
 			sb.append(s).append("\n").append("\n");
 		}
 		gui.displayFaults(sb.toString());
+	}
+
+	/**
+	 * Performs a series of checks to determine if the config file has completed
+	 */
+	public boolean doneScheduling() {
+		if (elevators.values().stream().anyMatch(e -> !e.getServiceQueue().isEmpty())) {
+			return false;
+		}
+		return masterQueue.isEmpty();
 	}
 }
