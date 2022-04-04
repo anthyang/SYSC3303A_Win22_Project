@@ -20,7 +20,7 @@ public class Scheduler extends Host implements Runnable{
 	public static int ELEVATOR_UPDATE_PORT = 5000;
 	public static int NEW_REQUEST_PORT = 5001;
 
-	public ConsoleGUI gui;
+	private ConsoleGUI gui;
 
 	/**
 	 * Scheduler constructor
@@ -66,14 +66,13 @@ public class Scheduler extends Host implements Runnable{
 		String[] faultTypes = {"hard", "transient"};
 
 		boolean elevatorShouldStop = elevator.shouldStopAtCurrentFloor();
-		boolean triggerFault = elevator.getServiceQueue().stream().anyMatch(
+		Optional<Request> triggerFault = elevator.getServiceQueue().stream().filter(
 				request -> Arrays.stream(faultTypes).anyMatch(request.isTriggerFault()::contains) &&
 						request.getDestFloor() == elevator.getCurrentFloor()
-		);
+		).findFirst();
 		String trigger = "";
-		if(triggerFault){
-			trigger = elevator.getServiceQueue().stream().filter(request -> Arrays.stream(faultTypes).anyMatch(request.isTriggerFault()::contains)
-					&& request.getDestFloor() == elevator.getCurrentFloor()).findFirst().get().isTriggerFault();
+		if(triggerFault.isPresent()){
+			trigger = triggerFault.get().isTriggerFault();
 			if(trigger.equals("transient")) {
 				String fault = "Fault find in elevator " + elevId + ": " + trigger;
 				log(fault);
@@ -150,7 +149,7 @@ public class Scheduler extends Host implements Runnable{
 		this.log("Received Request from floor: source floor " + req.getSourceFloor());
 
 		this.masterQueue.add(req);
-		this.requestsServed++;
+		requestsServed++;
 	}
 
 	/**
@@ -176,13 +175,11 @@ public class Scheduler extends Host implements Runnable{
 
 		int elevFloor = elevator.getCurrentFloor();
 
-		byte[] r = new byte[1];
+		byte[] r = { 0 };
 		if (elevFloor > req.getSourceFloor()) {
 			r[0] = -1;
 		} else if (elevFloor < req.getSourceFloor()) {
 			r[0] = 1;
-		} else {
-			r[0] = 0;
 		}
 
 		this.send(r, elevator.getAddress(), elevator.getPort());
@@ -205,7 +202,7 @@ public class Scheduler extends Host implements Runnable{
 			elevator.refreshLastReport(System.currentTimeMillis());
 
 			Request req;
-			byte[] r = new byte[1];
+			byte[] r = { 0 };
 			int elevFloor = elevator.getCurrentFloor();
 			if (elevator.getServiceQueue().isEmpty()) {
 				this.elevatorsNeedingService.add(elevId);
@@ -219,8 +216,6 @@ public class Scheduler extends Host implements Runnable{
 					r[0] = -1;
 				} else if (elevFloor < req.getDestFloor()) {
 					r[0] = 1;
-				} else {
-					r[0] = 0;
 				}
 				this.send(r, elevator.getAddress(), elevator.getPort());
 			}

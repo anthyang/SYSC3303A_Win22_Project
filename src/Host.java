@@ -146,14 +146,6 @@ public abstract class Host {
 
         return o;
     }
-
-    /**
-     * Get the port used by the host's socket
-     * @return the port used by the host's socket
-     */
-    public int getPort() {
-        return this.socket.getLocalPort();
-    }
     
     /**
      * Closes the socket for test classes.

@@ -8,7 +8,6 @@ import java.util.TimerTask;
  * Elevator subsystem class receives information packets from the scheduler to control the elevator motors and to open the doors.
  * The elevator also monitors and decides on destination requests while updating the lamps.
  * @author Gilles Myny
- * @id 101145477
  */
 public class Elevator extends Host implements Runnable {
     private int elevDoorNum;

@@ -9,7 +9,8 @@ File names were chosen to be as accurate as possible:
 - A building class simply runs all threads concurrently.
 - An abstract class called Host is used to simplify UDP functions.
 - ElevatorStatus allows the scheduler to track all essential elevator data
+- ConsoleGUI is used to present all information about elevators to the user when the program is run
+- StopWatch is a clock that measures the time certain operations in the project take to run
 
-To run the program, compile and run the program in the Eclipse IDE.
-
-Added Class, sequence, state, and time UML diagrams.
+To run the program, compile and run each subsystem in the Eclipse IDE. Start with the ConsoleGUI to boot up the Scheduler,
+followed by the Floor and Elevator subsystems.
