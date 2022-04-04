@@ -5,7 +5,9 @@ import org.junit.jupiter.api.Test;
 import java.net.InetAddress;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.LinkedBlockingDeque;
 
@@ -39,16 +41,33 @@ class SchedulerTest {
     }
     
     /**
-     * test for faulty error 
+     * test for transient error 
      */
     @Test
-    public void testFault() {
-        Request r = new Request(1, 3, Direction.UP, "hard");        
+    public void testTransientError() {
+        Request r = new Request(1, 4, Direction.UP, "transient");         
         s.registerElevator(1, InetAddress.getLoopbackAddress(), 9999);     
-        ElevatorReport eReport = new ElevatorReport(1, Direction.UP, 3);
-    	assertEquals(s.updateQueue(eReport), 0);
+        ElevatorReport eReport = new ElevatorReport(1, Direction.UP, 4);
+        ElevatorStatus elevator = s.getElevMap().get(eReport.getElevatorId());
+        elevator.addRequestToService(r);
+     	assertEquals(s.updateQueue(eReport), 2); 
     }    
     
+    /**
+     * test for hard error 
+     */
+    @Test
+    public void testHardError() {
+        Request r = new Request(1, 4, Direction.UP, "hard");
+        s.registerElevator(1, InetAddress.getLoopbackAddress(), 9999);     
+        ElevatorReport eReport = new ElevatorReport(1, Direction.UP, 4);
+        ElevatorStatus elevator = s.getElevMap().get(eReport.getElevatorId());
+        elevator.setInactive();
+        s.shutDownElevator(1);
+        elevator.addRequestToService(r);
+        assertEquals(s.updateQueue(eReport), 3);
+    } 
+         
     /**
      * Closes all the sockets so that the other Test classes can bind properly.
      */
