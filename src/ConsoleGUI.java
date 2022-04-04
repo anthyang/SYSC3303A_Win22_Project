@@ -31,14 +31,7 @@ public class ConsoleGUI extends JFrame {
     private JLabel elevatorTwoStatus;
     private JLabel elevatorThreeStatus;
     private JLabel elevatorFourStatus;
-    
-    private JPanel lampSectionOne;
-    private JPanel lampSectionTwo;
-    private JPanel lampElevOne;
-    private JPanel lampElevTwo;
-    private JPanel lampElevThree;
-    private JPanel lampElevFour;
-    
+
     private ArrayList<JCheckBox> elevLamps;
 
     private JTextArea faultList;
@@ -47,7 +40,6 @@ public class ConsoleGUI extends JFrame {
     private static final ImageIcon ON = new ImageIcon("resources/on.png");
 
     Color nardo = new Color (192, 192, 192);
-    Color space = new Color (128, 128, 128);
     Color white = new Color(255, 255, 255);
 
     /**
@@ -197,20 +189,20 @@ public class ConsoleGUI extends JFrame {
         /*
          * Elevator lamps.
          */
-        lampSectionOne = new JPanel(new GridLayout(1, 2, 2, 2));
+        JPanel lampSectionOne = new JPanel(new GridLayout(1, 2, 2, 2));
         lampSectionOne.setBorder(loweredBevel);
-        lampSectionTwo = new JPanel(new GridLayout(1, 2, 2, 2));
+        JPanel lampSectionTwo = new JPanel(new GridLayout(1, 2, 2, 2));
         lampSectionTwo.setBorder(raisedBevel);
-        lampElevOne = new JPanel(new GridLayout(8, 3, 1, 1));
+        JPanel lampElevOne = new JPanel(new GridLayout(8, 3, 1, 1));
         lampElevOne.setBackground(nardo);
         lampElevOne.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "Elevator One Lamps", TitledBorder.CENTER, TitledBorder.TOP));
-        lampElevTwo = new JPanel(new GridLayout(8, 3, 1, 1));
+        JPanel lampElevTwo = new JPanel(new GridLayout(8, 3, 1, 1));
         lampElevTwo.setBackground(nardo);
         lampElevTwo.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "Elevator Two Lamps", TitledBorder.CENTER, TitledBorder.TOP));
-        lampElevThree = new JPanel(new GridLayout(8, 3, 1, 1));
+        JPanel lampElevThree = new JPanel(new GridLayout(8, 3, 1, 1));
         lampElevThree.setBackground(white);
         lampElevThree.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "Elevator Three Lamps", TitledBorder.CENTER, TitledBorder.TOP));
-        lampElevFour = new JPanel(new GridLayout(8, 3, 1, 1));
+        JPanel lampElevFour = new JPanel(new GridLayout(8, 3, 1, 1));
         lampElevFour.setBackground(white);
         lampElevFour.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "Elevator Four Lamps", TitledBorder.CENTER, TitledBorder.TOP));
         elevLamps = new ArrayList<>();
