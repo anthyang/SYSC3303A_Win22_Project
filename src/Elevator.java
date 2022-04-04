@@ -16,7 +16,6 @@ public class Elevator extends Host implements Runnable {
     private int currentFloor;
 	private Direction direction;
 	private boolean doorsOpen;
-	private int sendPort;
 	private Timer timer;
 	private TimerTask timerTask;
 	private StopWatch serviceTimer = new StopWatch();
@@ -38,31 +37,11 @@ public class Elevator extends Host implements Runnable {
     	this.floorLamps = new boolean[floorCount];
     	this.dirLamps = 0; // -1 for down, 0 - not moving, 1 for up:
 		this.doorsOpen = true;
-		this.sendPort = Scheduler.ELEVATOR_UPDATE_PORT;
 		timer = new Timer("Timer "+id);//Making a new timer for each elevator
 		timerTask = new TimerTask() {
 			public void run() {}
 		};
     }
-
-	/**
-	 * Additional Elevator constructor to override the default send port.
-	 * @param id represents an Integer of the elevator's identification number.
-	 * @param floorCount represents an Integer of the maximum amount of floors in the building.
-	 */
-	public Elevator(int id, int floorCount, int sendPort) {
-		super("Elevator " + id);
-		this.elevDoorNum = id;
-		this.currentFloor = 1;
-		this.floorLamps = new boolean[floorCount];
-		this.dirLamps = 0; // -1 for down, 0 - not moving, 1 for up:
-		this.doorsOpen = true;
-		this.sendPort = sendPort;
-		timer = new Timer("Timer "+id);//Making a new timer for each elevator
-		timerTask = new TimerTask() {
-			public void run() {}
-		};
-	}
 
     /**
      * Picks up and drops off passengers endlessly
@@ -107,7 +86,7 @@ public class Elevator extends Host implements Runnable {
 		DatagramPacket response = this.rpcCall(
 				id,
 				InetAddress.getLoopbackAddress(),
-				this.sendPort
+				Scheduler.ELEVATOR_UPDATE_PORT
 		);
 
 		byte[] responseData = response.getData();
@@ -205,14 +184,14 @@ public class Elevator extends Host implements Runnable {
 	public boolean notifyArrival(boolean wasMoving) {
 		ElevatorReport report = new ElevatorReport(this.elevDoorNum, this.direction, this.currentFloor);
         this.log("Notifying scheduler of arrival at floor " + this.currentFloor + " at "
-				+ InetAddress.getLoopbackAddress() + ":" + this.sendPort);
+				+ InetAddress.getLoopbackAddress() + ":" + Scheduler.ELEVATOR_UPDATE_PORT);
 
         byte[] msg = Host.serialize(report);
 
 		DatagramPacket response = this.rpcCall(
 				msg,
 				InetAddress.getLoopbackAddress(),
-				this.sendPort
+				Scheduler.ELEVATOR_UPDATE_PORT
 		);
 
 		byte[] responseData = response.getData();

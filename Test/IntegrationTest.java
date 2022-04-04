@@ -28,17 +28,13 @@ public class IntegrationTest {
 		BlockingDeque<Integer> reqsToServe = new LinkedBlockingDeque<>();
 		Map<Integer, ElevatorStatus> elevators = Collections.synchronizedMap(new HashMap<>(Config.NUMBER_OF_ELEVATORS));
         s = new Scheduler(master, reqsToServe, elevators, false, false, new ConsoleGUI());
-		e1 = new Elevator(1, 7, s.getPort());
+		e1 = new Elevator(1, 7);
 		s.registerElevator(1, InetAddress.getLoopbackAddress(), 9999);
-		e2 = new Elevator(2, 7, s.getPort());
+		e2 = new Elevator(2, 7);
 		s.registerElevator(2, InetAddress.getLoopbackAddress(), 9999);
-		e3 = new Elevator(3, 7, s.getPort());
+		e3 = new Elevator(3, 7);
 		s.registerElevator(3, InetAddress.getLoopbackAddress(), 9999);
-		try {
-			f = new Floor("test", s.getPort());
-		} catch (SocketException e) {
-			e.printStackTrace();
-		}
+		f = new Floor("test");
 	}
 	
 	//Floor to Scheduler Communication

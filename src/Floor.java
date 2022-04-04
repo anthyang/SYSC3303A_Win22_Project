@@ -10,7 +10,6 @@ public class Floor extends Host implements Runnable {
     /** The input file for the program's requests */
     private String inputFile;
     private boolean finished_reading = false;
-    private int sendPort;
 
     /**
      * Create a new floor subsystem controller
@@ -19,17 +18,6 @@ public class Floor extends Host implements Runnable {
     public Floor(String inputName) {
         super("Floor");
         this.inputFile = inputName;
-        this.sendPort = Scheduler.NEW_REQUEST_PORT;
-    }
-
-    /**
-     * Create a new floor subsystem controller. Override the default send port
-     * @param inputName is the name of the input file
-     */
-    public Floor(String inputName, int sendPort) throws SocketException {
-        super("Floor");
-        this.inputFile = inputName;
-        this.sendPort = sendPort;
     }
 
     /**
@@ -41,7 +29,7 @@ public class Floor extends Host implements Runnable {
     public void requestElevator(int sourceFloor, int destFloor, Direction direction, String triggerFault) {
     	Request r = new Request(sourceFloor, destFloor, direction, triggerFault);
         byte[] s_request = Host.serialize(r);   //Turn the request object into a byte array
-        super.send(s_request, InetAddress.getLoopbackAddress(), this.sendPort);    //send the request
+        super.send(s_request, InetAddress.getLoopbackAddress(), Scheduler.NEW_REQUEST_PORT);    //send the request
         super.log("send request to scheduler.");
     }
 
