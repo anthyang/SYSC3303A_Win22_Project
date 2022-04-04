@@ -1,7 +1,6 @@
 import java.util.*;
 import java.net.*;
 import java.util.concurrent.BlockingDeque;
-import java.util.concurrent.LinkedBlockingDeque;
 
 /**
  * The scheduler class
@@ -12,14 +11,16 @@ public class Scheduler extends Host implements Runnable{
 	private BlockingDeque<Integer> elevatorsNeedingService;
 	private Map<Integer, ElevatorStatus> elevators;
 	private static Timer timer = new Timer();
+	private StopWatch totalTime = new StopWatch();
 	private boolean serveElevators;
 	private boolean serveNewRequests;
-	private ArrayList<String> faultList = new ArrayList<String>();
+	private ArrayList<String> faultList = new ArrayList<>();
+	private static int requestsServed = 0;
 
 	public static int ELEVATOR_UPDATE_PORT = 5000;
 	public static int NEW_REQUEST_PORT = 5001;
 
-	public ConsoleGUI gui;
+	private ConsoleGUI gui;
 
 	/**
 	 * Scheduler constructor
@@ -65,14 +66,13 @@ public class Scheduler extends Host implements Runnable{
 		String[] faultTypes = {"hard", "transient"};
 
 		boolean elevatorShouldStop = elevator.shouldStopAtCurrentFloor();
-		boolean triggerFault = elevator.getServiceQueue().stream().anyMatch(
+		Optional<Request> triggerFault = elevator.getServiceQueue().stream().filter(
 				request -> Arrays.stream(faultTypes).anyMatch(request.isTriggerFault()::contains) &&
 						request.getDestFloor() == elevator.getCurrentFloor()
-		);
+		).findFirst();
 		String trigger = "";
-		if(triggerFault){
-			trigger = elevator.getServiceQueue().stream().filter(request -> Arrays.stream(faultTypes).anyMatch(request.isTriggerFault()::contains)
-					&& request.getDestFloor() == elevator.getCurrentFloor()).findFirst().get().isTriggerFault();
+		if(triggerFault.isPresent()){
+			trigger = triggerFault.get().isTriggerFault();
 			if(trigger.equals("transient")) {
 				String fault = "Fault find in elevator " + elevId + ": " + trigger;
 				log(fault);
@@ -117,6 +117,7 @@ public class Scheduler extends Host implements Runnable{
 
 	@Override
 	public void run() {
+		this.totalTime.start();
 		if (this.serveElevators) {
 			if (this.serveNewRequests) {
 				while (true) {
@@ -148,6 +149,7 @@ public class Scheduler extends Host implements Runnable{
 		this.log("Received Request from floor: source floor " + req.getSourceFloor());
 
 		this.masterQueue.add(req);
+		requestsServed++;
 	}
 
 	/**
@@ -173,13 +175,11 @@ public class Scheduler extends Host implements Runnable{
 
 		int elevFloor = elevator.getCurrentFloor();
 
-		byte[] r = new byte[1];
+		byte[] r = { 0 };
 		if (elevFloor > req.getSourceFloor()) {
 			r[0] = -1;
 		} else if (elevFloor < req.getSourceFloor()) {
 			r[0] = 1;
-		} else {
-			r[0] = 0;
 		}
 
 		this.send(r, elevator.getAddress(), elevator.getPort());
@@ -202,7 +202,7 @@ public class Scheduler extends Host implements Runnable{
 			elevator.refreshLastReport(System.currentTimeMillis());
 
 			Request req;
-			byte[] r = new byte[1];
+			byte[] r = { 0 };
 			int elevFloor = elevator.getCurrentFloor();
 			if (elevator.getServiceQueue().isEmpty()) {
 				this.elevatorsNeedingService.add(elevId);
@@ -216,8 +216,6 @@ public class Scheduler extends Host implements Runnable{
 					r[0] = -1;
 				} else if (elevFloor < req.getDestFloor()) {
 					r[0] = 1;
-				} else {
-					r[0] = 0;
 				}
 				this.send(r, elevator.getAddress(), elevator.getPort());
 			}
@@ -240,6 +238,12 @@ public class Scheduler extends Host implements Runnable{
 			checkTimeout(elevator, elevId, arrivedTime);
 			byte[] sendResp = { (byte)this.updateQueue(er) };
 			this.send(sendResp, elevator.getAddress(), elevator.getPort());
+
+			if (this.doneScheduling()) {
+				long total = totalTime.end();
+				this.log("Total running time was " + total / Math.pow(10, 9) + " sec");
+				this.log("Served " + requestsServed + " requests. Avg time per request: " + total / requestsServed / Math.pow(10, 9) + " sec");
+			}
 		}
 	}
 
@@ -317,5 +321,15 @@ public class Scheduler extends Host implements Runnable{
 			sb.append(s).append("\n").append("\n");
 		}
 		gui.displayFaults(sb.toString());
+	}
+
+	/**
+	 * Performs a series of checks to determine if the config file has completed
+	 */
+	public boolean doneScheduling() {
+		if (elevators.values().stream().anyMatch(e -> !e.getServiceQueue().isEmpty())) {
+			return false;
+		}
+		return masterQueue.isEmpty();
 	}
 }

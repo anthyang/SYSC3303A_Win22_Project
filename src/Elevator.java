@@ -1,4 +1,5 @@
 import java.net.DatagramPacket;
+import java.lang.Math;
 import java.net.InetAddress;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -7,7 +8,6 @@ import java.util.TimerTask;
  * Elevator subsystem class receives information packets from the scheduler to control the elevator motors and to open the doors.
  * The elevator also monitors and decides on destination requests while updating the lamps.
  * @author Gilles Myny
- * @id 101145477
  */
 public class Elevator extends Host implements Runnable {
     private int elevDoorNum;
@@ -15,9 +15,10 @@ public class Elevator extends Host implements Runnable {
     private int currentFloor;
 	private Direction direction;
 	private boolean doorsOpen;
-	private int sendPort;
 	private Timer timer;
 	private TimerTask timerTask;
+	private StopWatch serviceTimer = new StopWatch();
+	private StopWatch loadTimer = new StopWatch();
 	private int openDoorTime = Config.DOOR_MOVEMENT;
 
     // add direction lamps to donate arrival and direction of an elevator at a floor
@@ -35,31 +36,11 @@ public class Elevator extends Host implements Runnable {
     	this.floorLamps = new boolean[floorCount];
     	this.dirLamps = 0; // -1 for down, 0 - not moving, 1 for up:
 		this.doorsOpen = true;
-		this.sendPort = Scheduler.ELEVATOR_UPDATE_PORT;
 		timer = new Timer("Timer "+id);//Making a new timer for each elevator
 		timerTask = new TimerTask() {
 			public void run() {}
 		};
     }
-
-	/**
-	 * Additional Elevator constructor to override the default send port.
-	 * @param id represents an Integer of the elevator's identification number.
-	 * @param floorCount represents an Integer of the maximum amount of floors in the building.
-	 */
-	public Elevator(int id, int floorCount, int sendPort) {
-		super("Elevator " + id);
-		this.elevDoorNum = id;
-		this.currentFloor = 1;
-		this.floorLamps = new boolean[floorCount];
-		this.dirLamps = 0; // -1 for down, 0 - not moving, 1 for up:
-		this.doorsOpen = true;
-		this.sendPort = sendPort;
-		timer = new Timer("Timer "+id);//Making a new timer for each elevator
-		timerTask = new TimerTask() {
-			public void run() {}
-		};
-	}
 
     /**
      * Picks up and drops off passengers endlessly
@@ -70,6 +51,8 @@ public class Elevator extends Host implements Runnable {
 				// Ensure passengers can load/unload
 				this.openDoor();
 			}
+			this.log("Loading/Unloading Passengers");
+			loadTimer.start();
 			// Ask scheduler for next direction of travel
 			this.direction = this.serveNewRequest();
 
@@ -78,10 +61,16 @@ public class Elevator extends Host implements Runnable {
 				this.notifyArrival(false);
 			} else {
 				this.closeDoor();
+				this.log("Loading/unloading time was " + (loadTimer.end() / Math.pow(10, 6)) + " msec");
+				loadTimer.reset();
 				do {
 					// Move elevator up/down until the scheduler tells it to stop and open its doors
+					serviceTimer.start();
 					this.simMovement();
 				} while (!this.notifyArrival(true));
+				serviceTimer.end();
+				this.log("Servicing time was " + (serviceTimer.end() / Math.pow(10, 6)) + " msec");
+				serviceTimer.reset();
 			}
 		}
     }
@@ -96,7 +85,7 @@ public class Elevator extends Host implements Runnable {
 		DatagramPacket response = this.rpcCall(
 				id,
 				InetAddress.getLoopbackAddress(),
-				this.sendPort
+				Scheduler.ELEVATOR_UPDATE_PORT
 		);
 
 		byte[] responseData = response.getData();
@@ -194,14 +183,14 @@ public class Elevator extends Host implements Runnable {
 	public boolean notifyArrival(boolean wasMoving) {
 		ElevatorReport report = new ElevatorReport(this.elevDoorNum, this.direction, this.currentFloor);
         this.log("Notifying scheduler of arrival at floor " + this.currentFloor + " at "
-				+ InetAddress.getLoopbackAddress() + ":" + this.sendPort);
+				+ InetAddress.getLoopbackAddress() + ":" + Scheduler.ELEVATOR_UPDATE_PORT);
 
         byte[] msg = Host.serialize(report);
 
 		DatagramPacket response = this.rpcCall(
 				msg,
 				InetAddress.getLoopbackAddress(),
-				this.sendPort
+				Scheduler.ELEVATOR_UPDATE_PORT
 		);
 
 		byte[] responseData = response.getData();
@@ -253,5 +242,13 @@ public class Elevator extends Host implements Runnable {
 	 */
 	public int getCurrentFloor() {
 		return currentFloor;
+	}
+
+	public static void main(String[] args) {
+		for (int i = 1; i <= Config.NUMBER_OF_ELEVATORS; i++) {
+			Elevator elevator = new Elevator(i, Config.NUMBER_OF_FLOORS);
+			Thread elevatorSystem = new Thread(elevator);
+			elevatorSystem.start();
+		}
 	}
 }
