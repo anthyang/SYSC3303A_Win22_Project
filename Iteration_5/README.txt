@@ -14,3 +14,5 @@ File names were chosen to be as accurate as possible:
 
 To run the program, compile and run each subsystem in the Eclipse IDE. Start with the ConsoleGUI to boot up the Scheduler,
 followed by the Floor and Elevator subsystems.
+
+Update SchedulerTest.java to test for transient and hard faulty.
