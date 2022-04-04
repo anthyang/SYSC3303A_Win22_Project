@@ -41,7 +41,7 @@ class SchedulerTest {
     }
     
     /**
-     * test for transient error in elevator system
+     * test for transient error 
      */
     @Test
     public void testTransientError() {
@@ -54,7 +54,7 @@ class SchedulerTest {
     }    
     
     /**
-     * test for hard error in elevator system
+     * test for hard error 
      */
     @Test
     public void testHardError() {
