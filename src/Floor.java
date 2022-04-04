@@ -16,7 +16,7 @@ public class Floor extends Host implements Runnable {
      * Create a new floor subsystem controller
      * @param inputName is the name of the input file
      */
-    public Floor(String inputName) throws SocketException {
+    public Floor(String inputName) {
         super("Floor");
         this.inputFile = inputName;
         this.sendPort = Scheduler.NEW_REQUEST_PORT;
@@ -64,7 +64,7 @@ public class Floor extends Host implements Runnable {
                     Direction chosenDirection = Direction.get(instructions[Config.DIRECTION_BUTTON]);
                     int sourceFloor = Integer.parseInt(instructions[Config.SOURCE_FLOOR]);
                     int destFloor = Integer.parseInt(instructions[Config.DEST_FLOOR]);
-                    String triggerFault = new String(instructions[Config.TRIGGER_FAULT]);
+                    String triggerFault = instructions[Config.TRIGGER_FAULT];
 
                     this.requestElevator(sourceFloor, destFloor, chosenDirection, triggerFault);
                 }
@@ -81,4 +81,9 @@ public class Floor extends Host implements Runnable {
      */
     public boolean doneReading() {return finished_reading;}
 
+    public static void main(String[] args) {
+        Floor floor = new Floor("src/input");
+        Thread floorSystem = new Thread(floor);
+        floorSystem.start();
+    }
 }

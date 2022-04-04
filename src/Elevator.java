@@ -265,4 +265,12 @@ public class Elevator extends Host implements Runnable {
 	public int getCurrentFloor() {
 		return currentFloor;
 	}
+
+	public static void main(String[] args) {
+		for (int i = 1; i <= Config.NUMBER_OF_ELEVATORS; i++) {
+			Elevator elevator = new Elevator(i, Config.NUMBER_OF_FLOORS);
+			Thread elevatorSystem = new Thread(elevator);
+			elevatorSystem.start();
+		}
+	}
 }

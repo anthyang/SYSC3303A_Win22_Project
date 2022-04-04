@@ -1,7 +1,6 @@
 import javax.swing.*;
 import javax.swing.border.Border;
 import java.awt.*;
-import java.net.SocketException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -266,7 +265,7 @@ public class ConsoleGUI extends JFrame {
         this.setVisible(true);
     }
 
-    public static void main(String[] args) throws SocketException {
+    public static void main(String[] args) {
         ConsoleGUI gui = new ConsoleGUI();
         gui.display();
 
@@ -285,15 +284,5 @@ public class ConsoleGUI extends JFrame {
         elevSch.start();
         reqSch.start();
         floorSch.start();
-
-        for (int i = 1; i <= Config.NUMBER_OF_ELEVATORS; i++) {
-            Elevator elevator = new Elevator(i, Config.NUMBER_OF_FLOORS);
-            Thread elevatorSystem = new Thread(elevator);
-            elevatorSystem.start();
-        }
-
-        Floor floor = new Floor("src/input");
-        Thread floorSystem = new Thread(floor);
-        floorSystem.start();
     }
 }
