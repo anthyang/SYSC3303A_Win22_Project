@@ -1,11 +1,14 @@
 import javax.swing.*;
 import javax.swing.border.Border;
+import javax.swing.border.TitledBorder;
+
 import java.awt.*;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.LinkedBlockingDeque;
+import java.util.*;
 
 /**
  * GUI class for Project.
@@ -26,6 +29,15 @@ public class ConsoleGUI extends JFrame {
     private JLabel elevatorTwoStatus;
     private JLabel elevatorThreeStatus;
     private JLabel elevatorFourStatus;
+    
+    private JPanel lampSectionOne;
+    private JPanel lampSectionTwo;
+    private JPanel lampElevOne;
+    private JPanel lampElevTwo;
+    private JPanel lampElevThree;
+    private JPanel lampElevFour;
+    
+    private ArrayList<JCheckBox> elevLamps;
 
     private JTextArea faultList;
 
@@ -38,7 +50,7 @@ public class ConsoleGUI extends JFrame {
      */
     public ConsoleGUI() {
         super("Elevator Monitoring");
-        this.setLayout(new GridLayout(3, 2, 2, 2));
+        this.setLayout(new GridLayout(4, 2, 2, 2));
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         this.setMinimumSize(new Dimension(700, 600));
         this.setBackground(white);
@@ -48,19 +60,19 @@ public class ConsoleGUI extends JFrame {
         Elevator One Control Panel
          */
         JPanel elevatorOnePanel = new JPanel(new GridLayout(2, 2, 1, 1));
-        elevatorOnePanel.setBackground(nardo);
+        elevatorOnePanel.setBackground(white);
         Border raisedBevel = BorderFactory.createRaisedBevelBorder();
         elevatorOnePanel.setBorder(raisedBevel);
         JLabel elevatorOneName = new JLabel();
-        elevatorOneName.setText("           Elevator #1");
+        elevatorOneName.setText("        Elevator #1");
         Border blackLine = BorderFactory.createLineBorder(Color.black);
         elevatorOneName.setBorder(blackLine);
-        Font bold = new Font("Verdana", Font.BOLD, 12);
+        Font bold = new Font("Verdana", Font.BOLD, 14);
         elevatorOneName.setFont(bold);
         elevatorOneFloorNum = new JLabel();
         elevatorOneFloorNum.setText(" Floor Number: ");
         elevatorOneFloorNum.setBorder(blackLine);
-        Font plain = new Font("Verdana", Font.PLAIN, 12);
+        Font plain = new Font("Verdana", Font.PLAIN, 14);
         elevatorOneFloorNum.setFont(plain);
         elevatorOneDirection = new JLabel();
         elevatorOneDirection.setText(" Direction: ");
@@ -79,11 +91,11 @@ public class ConsoleGUI extends JFrame {
         Elevator Two Control Panel
          */
         JPanel elevatorTwoPanel = new JPanel(new GridLayout(2, 2, 1, 1));
-        elevatorTwoPanel.setBackground(space);
+        elevatorTwoPanel.setBackground(nardo);
         Border loweredBevel = BorderFactory.createLoweredBevelBorder();
         elevatorTwoPanel.setBorder(loweredBevel);
         JLabel elevatorTwoName = new JLabel();
-        elevatorTwoName.setText("           Elevator #2");
+        elevatorTwoName.setText("        Elevator #2");
         elevatorTwoName.setBorder(blackLine);
         elevatorTwoName.setFont(bold);
         elevatorTwoFloorNum = new JLabel();
@@ -107,10 +119,10 @@ public class ConsoleGUI extends JFrame {
         Elevator Three Control Panel
          */
         JPanel elevatorThreePanel = new JPanel(new GridLayout(2, 2, 1, 1));
-        elevatorThreePanel.setBackground(space);
+        elevatorThreePanel.setBackground(nardo);
         elevatorThreePanel.setBorder(loweredBevel);
         JLabel elevatorThreeName = new JLabel();
-        elevatorThreeName.setText("           Elevator #3");
+        elevatorThreeName.setText("        Elevator #3");
         elevatorThreeName.setBorder(blackLine);
         elevatorThreeName.setFont(bold);
         elevatorThreeFloorNum = new JLabel();
@@ -134,10 +146,10 @@ public class ConsoleGUI extends JFrame {
         Elevator Four Control Panel
          */
         JPanel elevatorFourPanel = new JPanel(new GridLayout(2, 2, 1, 1));
-        elevatorFourPanel.setBackground(nardo);
+        elevatorFourPanel.setBackground(white);
         elevatorFourPanel.setBorder(raisedBevel);
         JLabel elevatorFourName = new JLabel();
-        elevatorFourName.setText("           Elevator #4");
+        elevatorFourName.setText("        Elevator #4");
         elevatorFourName.setBorder(blackLine);
         elevatorFourName.setFont(bold);
         elevatorFourFloorNum = new JLabel();
@@ -163,7 +175,7 @@ public class ConsoleGUI extends JFrame {
         JLabel faultListText = new JLabel();
         faultListText.setText("Fault List: ");
         faultListText.setHorizontalAlignment(JLabel.CENTER);
-        faultListText.setBackground(nardo);
+        faultListText.setBackground(white);
         faultListText.setBorder(raisedBevel);
         faultListText.setFont(bold);
         faultListText.setMinimumSize(new Dimension(350, 200));
@@ -176,13 +188,61 @@ public class ConsoleGUI extends JFrame {
         faultScrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
         faultScrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
         faultScrollPane.setMinimumSize(new Dimension(350, 200));
-
+        
+        /*
+         * Elevator lamps.
+         */
+        lampSectionOne = new JPanel(new GridLayout(1, 2, 2, 2));
+        lampSectionOne.setBorder(loweredBevel);
+        lampSectionTwo = new JPanel(new GridLayout(1, 2, 2, 2));
+        lampSectionTwo.setBorder(raisedBevel);
+        lampElevOne = new JPanel(new GridLayout(8, 3, 1, 1));
+        lampElevOne.setBackground(nardo);
+        lampElevOne.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "Elevator One Lamps", TitledBorder.CENTER, TitledBorder.TOP));
+        lampElevTwo = new JPanel(new GridLayout(8, 3, 1, 1));
+        lampElevTwo.setBackground(nardo);
+        lampElevTwo.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "Elevator Two Lamps", TitledBorder.CENTER, TitledBorder.TOP));
+        lampElevThree = new JPanel(new GridLayout(8, 3, 1, 1));
+        lampElevThree.setBackground(white);
+        lampElevThree.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "Elevator Three Lamps", TitledBorder.CENTER, TitledBorder.TOP));
+        lampElevFour = new JPanel(new GridLayout(8, 3, 1, 1));
+        lampElevFour.setBackground(white);
+        lampElevFour.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "Elevator Four Lamps", TitledBorder.CENTER, TitledBorder.TOP));
+        elevLamps = new ArrayList<>();
+        for(int i = 0; i < (Config.NUMBER_OF_ELEVATORS * Config.NUMBER_OF_FLOORS); i++) {
+        	elevLamps.add(new JCheckBox("" + ((i % Config.NUMBER_OF_FLOORS) + 1)));
+        	elevLamps.get(i).setSelected(false);
+        	elevLamps.get(i).setOpaque(false);
+        	switch(i / Config.NUMBER_OF_FLOORS) {
+        		case(0):
+        			lampElevOne.add(elevLamps.get(i));
+        			break;
+        		case(1):
+        			lampElevTwo.add(elevLamps.get(i));
+        			break;
+        		case(2):
+        			lampElevThree.add(elevLamps.get(i));
+        			break;
+        		case(3):
+        			lampElevFour.add(elevLamps.get(i));
+        			break;
+        	}
+        }
+                
+        lampSectionOne.add(lampElevOne);
+        lampSectionOne.add(lampElevTwo);
+        lampSectionTwo.add(lampElevThree);
+        lampSectionTwo.add(lampElevFour);
+    
+        
         this.add(elevatorOnePanel);
         this.add(elevatorTwoPanel);
         this.add(elevatorThreePanel);
         this.add(elevatorFourPanel);
         this.add(faultListText);
         this.add(faultScrollPane);
+        this.add(lampSectionOne);
+        this.add(lampSectionTwo);
     }
 
     /*
@@ -218,16 +278,16 @@ public class ConsoleGUI extends JFrame {
     public void displayElevatorDirection(int elevatorID, Direction dir) {
         switch(elevatorID) {
             case(1):
-                elevatorOneDirection.setText(" Direction: " + dir.toString());
+                elevatorOneDirection.setText("<html> Direction: <br/>" + dir.toString() + "</html>");
                 break;
             case(2):
-                elevatorTwoDirection.setText(" Direction: " + dir.toString());
+                elevatorTwoDirection.setText("<html> Direction: <br/>" + dir.toString() + "</html>");
                 break;
             case(3):
-                elevatorThreeDirection.setText(" Direction: " + dir.toString());
+                elevatorThreeDirection.setText("<html> Direction: <br/>" + dir.toString() + "</html>");
                 break;
             case(4):
-                elevatorFourDirection.setText(" Direction: " + dir.toString());
+                elevatorFourDirection.setText("<html> Direction: <br/>" + dir.toString() + "</html>");
                 break;
         }
     }

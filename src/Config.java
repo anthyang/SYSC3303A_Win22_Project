@@ -8,7 +8,7 @@ public class Config {
     public static final int ELEVATOR_MOVEMENT = 2832;
     public static final int TIMEOUT = 20000;
     public static final int NUMBER_OF_ELEVATORS = 4;
-    public static final int NUMBER_OF_FLOORS = 20;
+    public static final int NUMBER_OF_FLOORS = 22;
     public static final int TIME = 0;
     public static final int SOURCE_FLOOR = 1;
     public static final int DIRECTION_BUTTON = 2;
